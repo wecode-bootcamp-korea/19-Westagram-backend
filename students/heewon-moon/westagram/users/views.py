@@ -17,7 +17,8 @@ class SignUpView(View):
             nickname    = data['nickname']
             phone       = data['phone']
 
-            email_pattern       = '[a-zA-Z0-9_-]+@[a-z]+.[a-z]+'
+            
+            email_pattern       = '^[a-zA-Z0-9+-_.]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$'
             email_is_valid      = re.compile(email_pattern)
             email_check         = email_is_valid.match(email)
 
