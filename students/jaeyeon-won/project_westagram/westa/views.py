@@ -16,11 +16,9 @@ class SignupView(View):
             email = data['email']
             username = data ['username']
             password = data['password']
-
             email_vaildation = re.match('[a-zA-Z0-9._+-]+@[a-z0-9-]+\.[a-z.]+',email)
             password_vaildation = re.match('^(?=.*[a-zA-Z0-9.,-]).{8,}$',password)
             
-
             if name =='':
                 return JsonResponse({'message' : '이름을 입력하세요!'}, status = 400)
             if phone_number =='' and email =='':
