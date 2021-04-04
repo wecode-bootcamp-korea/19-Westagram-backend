@@ -4,7 +4,7 @@ import re
 from django.http       import JsonResponse
 from django.views      import View
 
-from .models       import User
+from .models           import User
 from .my_exceptions    import *
 
 class Signup(View):
