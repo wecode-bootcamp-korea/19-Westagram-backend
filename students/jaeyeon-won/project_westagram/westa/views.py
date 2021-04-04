@@ -1,4 +1,5 @@
 import json
+import re
 
 from django.views import View
 from django.http import JsonResponse
@@ -16,6 +17,10 @@ class SignupView(View):
             username = data ['username']
             password = data['password']
 
+            email_vaildation = re.match('[a-zA-Z0-9._+-]+@[a-z0-9-]+\.[a-z.]+',email)
+            password_vaildation = re.match('^(?=.*[a-zA-Z0-9.,-]).{8,}$',password)
+            
+
             if name =='':
                 return JsonResponse({'message' : '이름을 입력하세요!'}, status = 400)
             if phone_number =='' and email =='':
@@ -24,12 +29,10 @@ class SignupView(View):
                 return JsonResponse({'message' : 'username을 입력하세요!'}, status = 400)
             if password == '':
                 return JsonResponse({'message' : '비밀번호를 입력하세요!'}, status = 400)
-            if '@' not in email or '.' not in email:
+            if not email_vaildation:
                 return JsonResponse({'messsage' : '이메일 형식에 맞게 작성해주세요!'}, status = 400)
-            #if not phone_number[:2] == 10 or phone_number[:2] == 11 or phone_number[:2] == 16 or phone_number[:2] == 17 or phone_number[:2] == 19:
-            #    return JsonResponse({'형식에 맞는 휴대폰번호를 입력해주세요!'}, status = 400)
-            if len(password) <= 7:
-                return JsonResponse({'message' : '비밀번호는 8자리 이상으로 작성해주세요'}, status = 400)
+            if not password_vaildation:
+                return JsonResponse({'message' : '비밀번호 형식에 맞게 작성해주세요!'}, status = 400)
             if User.objects.filter(phone_number = phone_number):
                 return JsonResponse({'message' : '이미 존재하는 휴대폰 번호입니다.'}, status = 400)
             if User.objects.filter(username = username):
@@ -44,25 +47,30 @@ class SignupView(View):
                 username=username,
                 password=password
                 )
-            return JsonResponse({'message' : '회원가입을 축하합니다!'}, status = 200)
+            return JsonResponse({'message' : '회원가입을 축하합니다!'}, status = 201)
         except KeyError:
             return JsonResponse({'message':'KEY_ERROR'}, status = 400)
-'''
-    class SigninView(View):
-        def post(self,request):
-            data = json.loads(request.body)
-            try:
-                email = data['email']
-                password = data['password']
-                if User.objects.filter(email=email).exists():           # filter().exists()는 T or F 출력
-                    if password =='':
-                        return JsonResponse({'message': '비밀번호를 입력해주세요!'},status = 400)
-                    if User.objects.filter(password=password).exists():
-                        return JsonResponse({'message': '로그인에 성공했습니다!'}, status = 200)
-                    else:
-                        return JsonResponse({'message': '비밀번호를 확인해주세요'}, status = 400)
-'''
-            
+
+class SigninView(View):
+    def post(self,request):
+        data = json.loads(request.body)
+        try:
+            username = data['username']
+            phone_number = data['phone_number']
+            email = data['email']
+            password = data['password']
+
+            if User.objects.filter(email=email).exists() or User.objects.filter(username=username).exists() or User.objects.filter(phone_number=phone_number).exists():           # filter().exists()는 T or F 출력
+                if password =='':
+                    return JsonResponse({'message': '비밀번호를 입력해주세요!'},status = 401)
+                if User.objects.filter(password=password).exists():
+                    return JsonResponse({'message': '로그인에 성공했습니다!'}, status = 200)
+                else:
+                    return JsonResponse({'message': '비밀번호를 확인해주세요!'}, status = 401)
+            else:
+                return JsonResponse({'message': '아이디를 확인해주세요!'}, status = 401)
+        except KeyError:
+            return JsonResponse({'message': 'KEY_ERROR'},status = 400)
         
 
             
