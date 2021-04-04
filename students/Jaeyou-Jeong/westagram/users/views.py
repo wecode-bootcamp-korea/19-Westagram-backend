@@ -11,7 +11,7 @@ class Sign(View):
         try:
             find_1 = data['email'].find('@')
             find_2 = data['email'].find('.')
-            if 0 < len(data['password']) < 8:
+            if len(data['password']) < 8:
                 return JsonResponse({"message": "비밀번호는 8자리 이상으로 만들어 주세요."}, status=400)
             elif find_1 == -1\
                     or find_2 == -1\
