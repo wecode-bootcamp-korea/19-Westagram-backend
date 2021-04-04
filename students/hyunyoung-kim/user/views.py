@@ -1,11 +1,15 @@
 import json
-import re
 
 from django.http       import JsonResponse
 from django.views      import View
 
 from .models           import User
 from .my_exceptions    import *
+from .utils            import email_check
+from .utils            import password_check
+from .utils            import duplicate_email_check
+from .utils            import duplicate_nickname_check
+
 
 class Signup(View):
     def post(self, request):
@@ -16,16 +20,16 @@ class Signup(View):
             nickname   = data['nickname']
             password   = data['password']
 
-            if not(Signup.email_check(email)):
+            if not(email_check(email)):
                 raise InvalidEmail('INVALID_EMAIL_ADDRESS')
             
-            if not(Signup.password_check(password)):
+            if not(password_check(password)):
                 raise InvalidPassword('INVALID_PASSWORD')
 
-            if Signup.duplicate_email_check(email):
+            if duplicate_email_check(email):
                 raise AlreadyExistEmail('ALREADY_EXISTS_EMAIL')
 
-            if Signup.duplicate_nickname_check(nickname):
+            if duplicate_nickname_check(nickname):
                 raise AlreadyExistNickname('ALREADY_EXISTS_NICKNAME')
 
         except KeyError:
@@ -58,17 +62,7 @@ class Signup(View):
 
 
 
-    def email_check(email):
-        return re.match('^[a-zA-Z0-9+-_.]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$', email) != None 
-
-    def password_check(password):
-        return len(password)>=8
-
-    def duplicate_email_check(email):
-        return User.objects.filter(email=email).exists() 
     
-    def duplicate_nickname_check(nickname):
-        return User.objects.filter(nickname=nickname).exists()
  
         
             
