@@ -2,21 +2,21 @@ import json
 import re
 
 from django.views import View
-from django.http import JsonResponse
+from django.http  import JsonResponse
 
-from .models import User
+from .models      import User
 
 class SignupView(View):
     def post(self,request):
         data = json.loads(request.body)
 
         try:
-            name = data['name']
-            phone_number = data['phone_number']
-            email = data['email']
-            username = data ['username']
-            password = data['password']
-            email_vaildation = re.match('[a-zA-Z0-9._+-]+@[a-z0-9-]+\.[a-z.]+',email)
+            name                = data['name']
+            phone_number        = data['phone_number']
+            email               = data['email']
+            username            = data ['username']
+            password            = data['password']
+            email_vaildation    = re.match('[a-zA-Z0-9._+-]+@[a-z0-9-]+\.[a-z.]+',email)
             password_vaildation = re.match('^(?=.*[a-zA-Z0-9.,-]).{8,}$',password)
             
             if name =='':
@@ -39,11 +39,11 @@ class SignupView(View):
                 return JsonResponse({'message' : '이미 가입되어 있는 이메일 입니다.'}, status = 400)
 
             User.objects.create(
-                name = name,
-                phone_number=phone_number,
-                email=email,
-                username=username,
-                password=password
+                name         = name,
+                phone_number = phone_number,
+                email        = email,
+                username     = username,
+                password     = password
                 )
             return JsonResponse({'message' : '회원가입을 축하합니다!'}, status = 201)
         except KeyError:
@@ -53,10 +53,10 @@ class SigninView(View):
     def post(self,request):
         data = json.loads(request.body)
         try:
-            username = data['username']
+            username     = data['username']
             phone_number = data['phone_number']
-            email = data['email']
-            password = data['password']
+            email        = data['email']
+            password     = data['password']
 
             if User.objects.filter(email=email).exists() or User.objects.filter(username=username).exists() or User.objects.filter(phone_number=phone_number).exists():           # filter().exists()는 T or F 출력
                 if password =='':
