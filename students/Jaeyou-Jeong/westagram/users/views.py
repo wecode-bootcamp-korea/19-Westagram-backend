@@ -1,4 +1,5 @@
 import json
+import bcrypt
 
 from django.http import JsonResponse
 from django.views import View
@@ -22,7 +23,7 @@ class Sign(View):
 
             User.objects.create(
                     email        = data['email'],
-                    password     = data['password'],
+                    password     = bcrypt.hashpw(data['password'].encode('utf-8'), bcrypt.gensalt()).decode('utf-8'),
                     phone_number = data['phone_number'],
                     user_name    = data['user_name']
                     )
