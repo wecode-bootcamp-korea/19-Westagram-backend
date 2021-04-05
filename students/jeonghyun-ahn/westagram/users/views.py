@@ -15,16 +15,16 @@ class UserView(View):
 
 
         if len(id_1) <= 0 or len(input2) == 0 :
-                return JsonResponse({'message':'KEY_ERROR'}, status=401)
+                return JsonResponse({'message':'KEY_ERROR'}, status=400)
 
         elif not email_check.match(id_1) and not phone_check.match(id_1):
-                return JsonResponse({'message':'Invaild ID_ERROR'}, status=402)
+                return JsonResponse({'message':'Invaild ID_ERROR'}, status=400)
            
         elif len(input2) < 8:
-                return JsonResponse({'message':'Invaild PW_Error'}, status=403)
+                return JsonResponse({'message':'Invaild PW_Error'}, status=400)
 
         elif User.objects.filter(nickname=nickname):
-                return JsonResponse({'message':'Nickname Duplicate_Error'}, status=404)
+                return JsonResponse({'message':'Nickname Duplicate_Error'}, status=400)
         
         elif User.objects.filter(email=id_1):
                 return JsonResponse({'message':'ID Duplicate_Error'}, status=400)
