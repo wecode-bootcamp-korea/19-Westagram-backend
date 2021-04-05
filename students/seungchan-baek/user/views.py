@@ -13,25 +13,23 @@ class SignUpView(View):
         phone_number_check   = re.compile('^\d{3}-\d{3,4}-\d{4}$')
         password_check       = re.compile('^(?=.*[A-Za-z])(?=.*\d)(?=.*[$@$!%*#?&])[A-Za-z\d$@$!%*#?&]{8,}$')
 
-        identification       = data['identification']
-        password             = data['password']
-        name                 = data['name']
-        nickname             = data['nickname']
-
-
-
         try:
+            identification = data['identification']
+            password       = data['password']
+            name           = data['name']
+            nickname       = data['nickname']
+
             if User.objects.filter(identification=identification):
                 return JsonResponse({'MESSAGE':'IDENTIFICATION_ALREADY_EXIST'}, status=400)
 
-            elif User.objects.filter(nickname=nickname):
+            if User.objects.filter(nickname=nickname):
                 return JsonResponse({'MESSAGE':'NICKNAME_ALREADY_EXIST'}, status=400)
 
-            elif not email_check.match(identification) and not phone_number_check.match(identification):
-                return JsonResponse({'MESSAGE':'INVALID IDENTIFICATION'}, status=400)
+            if not email_check.match(identification) and not phone_number_check.match(identification):
+                return JsonResponse({'MESSAGE':'INVALID_IDENTIFICATION'}, status=400)
 
-            elif not password_check.match(password):
-                return JsonResponse({'MESSAGE':'INVALID PASSWORD'}, status=400)
+            if not password_check.match(password):
+                return JsonResponse({'MESSAGE':'INVALID_PASSWORD'}, status=400)
 
             else:
                 User.objects.create(
@@ -58,7 +56,7 @@ class LogInView(View):
                 else:
                     return JsonResponse({"message": "SUCCESS"}, status=200)
 
-            elif 'nickname' in data:
+            if 'nickname' in data:
                 if not User.objects.filter(nickname=data['nickname']) or not User.objects.filter(password=data['password']):
                     return JsonResponse({'MESSAGE':'INVALID_USER'}, status=401)
                 else:
