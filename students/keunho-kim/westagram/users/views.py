@@ -7,8 +7,13 @@ from users.models     import User
 class SignUpView(View):
     def post(self, request):
         data = json.loads(request.body)
+        User.objects.create(id=data['id'], email=data['email'], password=data['password'])
 
-        if request.method == 'POST':
+
 
 
         return JsonResponse({'message': 'Success!'}, status=200)
+
+class LogInView(View):
+     def post(self, request):
+        data = json.loads(request.body)
