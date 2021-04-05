@@ -44,6 +44,7 @@ class SignUpView(View):
         check_password = re.compile('^(?!.*\s)(?=.*[A-Z])(?=.*\d)(?=.*[a-z])(?=.*[!@#$%&*])')
         valid_password = re.search(check_password, data['password'])
         hashed_password = bcrypt.hashpw(data['password'].encode('utf-8'), bcrypt.gensalt())
+        password = hashed_password.decode('utf-8')
         
         try:
             
@@ -63,7 +64,7 @@ class SignUpView(View):
                     
                     User.objects.create(
                         phone_number=phone_number,
-                        password=hashed_password
+                        password=password
                     )
                     message     = 'SUCCESS'
                     status_code = 201
@@ -73,7 +74,7 @@ class SignUpView(View):
                         raise DuplicateUserId()
                     User.objects.create(
                         user_id=user_id,
-                        password=hashed_password
+                        password=password
                     )
                     message     = 'SUCCESS'
                     status_code = 201
@@ -83,14 +84,14 @@ class SignUpView(View):
                     User.objects.create(
                             user_id      = data['user_id'],
                             email        = data['email'],
-                            password     = hashed_password,
+                            password     = password,
                             phone_number = phone_number 
                         )
                     message     = 'SUCCESS'
                     status_code = 201
                 User.objects.create(
                     email    = data['email'],
-                    password = hashed_password
+                    password = password
                 )
                 message     = 'SUCCESS'
                 status_code = 201
@@ -152,10 +153,11 @@ class LoginView(View):
                     
                     if not user_id_check:
                         raise InvalidUser
-                    elif bcrypt.checkpw(password.encode('utf-8'), user_id_check.get().password):
+                    elif bcrypt.checkpw(password.encode('utf-8'), user_id_check.get().password.encode('utf-8')):
+                        return JsonResponse({'message': 'SUCCESS'}, status=200)
+                    else:
                         raise InvalidUser
-                    else: return JsonResponse({'message': 'SUCCESS'}, status=200)
-                
+                    
                 elif 'email' in data:
                     
                     email       = data['email']
@@ -163,10 +165,11 @@ class LoginView(View):
                     
                     if not email_check:
                         raise InvalidUser
-                    elif bcrypt.checkpw(password.encode('utf-8'), email_check.get().password):
+                    elif bcrypt.checkpw(password.encode('utf-8'), email_check.get().password.encode('utf-8')):
+                        return JsonResponse({'message': 'SUCCESS'}, status=200)
+                    else:
                         raise InvalidUser
-                    else: return JsonResponse({'message': 'SUCCESS'}, status=200)
-                
+                    
                 else:
                     
                     phone_number       = str(data['phone_number'])
@@ -174,10 +177,11 @@ class LoginView(View):
                     
                     if not phone_number_check:
                         raise InvalidUser
-                    elif bcrypt.checkpw(password.encode('utf-8'), phone_number_check.get().password):
+                    elif bcrypt.checkpw(password.encode('utf-8'), phone_number_check.get().password.encode('utf-8')):
+                        return JsonResponse({'message': 'SUCCESS'}, status=200)
+                    else:
                         raise InvalidUser
-                    else: return JsonResponse({'message': 'SUCCESS'}, status=200)
-
+    
         except KeyError:
             return JsonResponse({'message': 'KEY_ERROR'}, status=400)
         
