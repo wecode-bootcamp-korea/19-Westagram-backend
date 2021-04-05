@@ -1,7 +1,7 @@
 from django.db import models
 
 class User(models.Model):
-    mobile_number = models.IntegerField(unique=True, null=True)
+    mobile_number = models.CharField(max_length=50, unique=True, null=True)
     email         = models.EmailField(max_length=200, unique=True, null=True)
     name          = models.CharField(max_length=100)
     user_name     = models.CharField(max_length=100, unique=True)
