@@ -1,48 +1,39 @@
 import json
+import bcrypt
 
 from django.http            import JsonResponse, response
-from django.core.exceptions import ValidationError
 from django.views           import View
 
 from users.models import User
 
-class RegisterView(View):
+class SignupView(View):
     def post(self, request):
-        data = json.loads(request.body)
-        useremail   = data['useremail']
-        password    = data['password']
-        re_password = data['re_password']
+        data         = json.loads(request.body)
+        email        = data['email']
+        password     = data['password']
+        name         = data['name']
+        phone_number = data['phone_number']
 
-        try:
-            if User.objects.get(useremail=useremail):
-                response_message = "Duplicate_Useremail"
-                status_code = 400
+        if User.objects.filter(email=email).exists():
+            return JsonResponse({"message":"Duplicate_Useremail"}, status = 400)
+
+        if not (email and password):
+            return JsonResponse({"message":"KEY_ERROR"}, status = 400)
+
+        if not ('@' in email) or not ('.' in email ):
+            return JsonResponse({"message":"Enter a valid useremail"}, status = 400)
+
+        if len(password) < 8:
+            return JsonResponse({"message":"Password must be at least 8 characters"}, status = 400)
         
-                return JsonResponse({"message":response_message}, status = status_code)
-        except:
-            pass
-
-        if not (useremail and password and re_password):
-            response_message = "KEY_ERROR"
-            status_code      = 400
-        
-        elif not ('@' in useremail) or not ('.' in useremail ):
-            raise ValidationError("Enter a valid useremail")
-            
-        elif len(password) < 8:
-            raise ValidationError("Password mus be at least 8 characters")
-
-        elif password != re_password:
-            raise ValidationError("Password_MISMATCH")
- 
         else:
+            hashed_password  = bcrypt.hashpw(password.encode('UTF-8'), bcrypt.gensalt())
             User.objects.create(
-                useremail = useremail,
-                password = password,
+                email        = email,
+                password     = hashed_password,
+                name         = name,
+                phone_number = phone_number,
             )
 
-            response_message = "SUCCESS"
-            status_code      = 200
-
-        return JsonResponse({"message":response_message}, status = status_code)
+            return JsonResponse({"message":"SUCCESS"}, status = 200)
    
