@@ -1,11 +1,11 @@
 import re
 import json
 
-from django.views           import View
-from django.http            import JsonResponse
+from django.views import View
+from django.http  import JsonResponse
 
-from .models                import User
-from .helpers               import email_validator, password_validator, phone_validator
+from .models      import User
+from .validators  import email_validator, password_validator, phone_validator
 
 
 class SignUpView(View):
@@ -37,6 +37,36 @@ class SignUpView(View):
                 nickname    = nickname,
                 phone       = phone
             )
+
+            return JsonResponse({'MESSAGE' : 'SUCCESS'}, status=200)
+
+        except KeyError:
+            return JsonResponse({'MESSAGE' : 'KEY ERROR'}, status=400)
+
+
+class SignInView(View):
+    def post(self, request):
+        try:
+            data = json.loads(request.body)
+
+            account = data['account']
+            password = data['password']
+
+
+            if email_validator(account):
+                user = User.objects.get(email=account)
+            elif phone_validator(account):
+                user = User.objects.get(phone=account)
+            else:
+                user = User.objects.get(nickname=account)
+            
+
+            if not user:
+                return JsonResponse({'MESSSAGE' : 'INVALID USER'}, status=401)
+            
+            if user.password != password:
+                return JsonResponse({'MESSAGE' : 'WRONG PASSWORD'}, status=401)
+            
 
         except KeyError:
             return JsonResponse({'MESSAGE' : 'KEY ERROR'}, status=400)

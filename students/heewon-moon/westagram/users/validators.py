@@ -1,7 +1,7 @@
 import re
 
 def password_validator(password):
-    validator = re.compile('^(?=.*[A-Z])(?=.*[!@#$&*?])(?=.*[0-9])(?=.*[a-z])([^\s])*$')
+    validator = re.compile('^(?=.*[A-Z])(?=.*[!@#$&*?])(?=.*[0-9])(?=.*[a-z])([\S]){8,}$')
     
     if validator.match(password):
         return True
@@ -16,7 +16,6 @@ def email_validator(email):
 
 def phone_validator(phone):
     validator = re.compile('^\d{9,11}$')
-
     if validator.match(phone):
         return True
     return False
