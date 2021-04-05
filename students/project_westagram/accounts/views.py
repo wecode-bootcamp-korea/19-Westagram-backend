@@ -28,7 +28,7 @@ class SignupView(View):
         if len(data['user_pw']) < 8 or len(data['user_pw']) > 30:
             return JsonResponse({'message': 'KEY_ERROR Password too short!'}, status = 400)
         # 2nd if > 비밀번호 복잡도 확인1, 
-        if not re.findall('[a-zA-Z]+', data['user_pw']) and not re.findall('[0-9]+', data['user_pw']):
+        if not re.findall('[a-zA-Z]+', data['user_pw']) or not re.findall('[0-9]+', data['user_pw']):
             return JsonResponse({'message': 'KEY_ERROR Invalid Password(각 하나 이상의 소문자, 대문자, 숫자를 포함하세요)'}, status = 400)
         # 3rd if > 비밀번호 복잡도 확인2
         if not pw_validation.findall(data['user_pw']):
@@ -55,7 +55,13 @@ class LoginView(View):
     def post(self, request):
         data = json.loads(request.body)
         
+        id_validation = re.compile('^[a-zA-Z0-9+-_.]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$')
         
-    pass
-
-
+        if not id_validation.match(data['user_id']):
+            return JsonResponse({'message': 'Invalid ID'}, status = 400)
+        if not Accounts.objects.filter(user_id = data['user_id']).exists():
+            return JsonResponse({'message': 'ID doesn\'t exist'}, status = 400)
+        elif data['user_pw'] == Accounts.objects.get(user_id = data['user_id']).user_pw:
+            return JsonResponse({'message': 'Log in Successful'}, status = 200)
+        else:
+            return JsonResponse({'message': 'Wrong Password'}, status = 400)
