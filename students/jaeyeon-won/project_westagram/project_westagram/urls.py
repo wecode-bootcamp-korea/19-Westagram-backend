@@ -16,5 +16,5 @@ Including another URLconf
 from django.urls import path,include
 
 urlpatterns = [
-    path('accounts',include('westa.urls'))
+    path('accounts',include('accounts.urls'))
 ]

@@ -58,7 +58,7 @@ class SigninView(View):
             email        = data['email']
             password     = data['password']
 
-            if User.objects.filter(email=email).exists() or User.objects.filter(username=username).exists() or User.objects.filter(phone_number=phone_number).exists():           # filter().exists()는 T or F 출력
+            if User.objects.filter(email=email).exists() or User.objects.filter(username=username).exists() or User.objects.filter(phone_number=phone_number).exists():    
                 if password =='':
                     return JsonResponse({'message': '비밀번호를 입력해주세요!'},status = 401)
                 if User.objects.filter(password=password).exists():
