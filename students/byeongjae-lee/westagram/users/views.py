@@ -38,7 +38,6 @@ class SignUpView(View):
         status_code = 400
         data        = json.loads(request.body)
 
-        phone_number = str(data['phone_number'])
         
         check_email    = re.compile('^(\w|\.|\_|\-)+[@](\w|\_|\-|\.)+[.]\w{2,3}$')
         valid_email    = re.search(check_email, data['email'])
@@ -53,19 +52,34 @@ class SignUpView(View):
             else:
                 if not valid_email:
                     raise InvalidEmail()
-                elif not valid_password:
-                    raise InvalidPassword()
-                elif not phone_number.isdigit() or len(phone_number) > 11 or len(phone_number) < 10 or phone_number[0] != '0':
-                        raise InvalidPhoneNumber
                 elif (len(data['password']) <= 8) or not valid_password:
                     raise InvalidPassword()
-                elif User.objects.filter(user_id=data['user_id']):
-                    raise DuplicateUserId()
+                elif 'phone_number' in data:
+                    phone_number = str(data['phone_number'])
+                    if not phone_number.isdigit() or len(phone_number) > 11 or len(phone_number) < 10 or phone_number[0] != '0':
+                        raise InvalidPhoneNumber
+                    elif User.objects.filter(phone_number=phone_number): 
+                        raise DuplicatePhoneNumber()
+                    
+                    User.objects.create(
+                        phone_number=phone_number,
+                        password=hashed_password
+                    )
+                    message     = 'SUCCESS'
+                    status_code = 201
+                elif 'user_id' in data:
+                    user_id = data['user_id']
+                    if User.objects.filter(user_id=data['user_id']):
+                        raise DuplicateUserId()
+                    User.objects.create(
+                        user_id=user_id,
+                        password=hashed_password
+                    )
+                    message     = 'SUCCESS'
+                    status_code = 201
                 elif User.objects.filter(email=data['email']):
                     raise DuplicateEmail()
-                elif User.objects.filter(phone_number=phone_number):
-                    raise DuplicatePhoneNumber()
-                else:
+                elif ('email' and 'phone_number' and 'user_id') in data:
                     User.objects.create(
                             user_id      = data['user_id'],
                             email        = data['email'],
@@ -74,6 +88,12 @@ class SignUpView(View):
                         )
                     message     = 'SUCCESS'
                     status_code = 201
+                User.objects.create(
+                    email    = data['email'],
+                    password = hashed_password
+                )
+                message     = 'SUCCESS'
+                status_code = 201
         
         except KeyError:
             
