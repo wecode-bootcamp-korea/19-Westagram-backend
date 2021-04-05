@@ -13,10 +13,10 @@ class SignUpView(View):
         try:
             data = json.loads(request.body)
 
-            email       = data['email']
-            password    = data['password']
-            nickname    = data['nickname']
-            phone       = data['phone']
+            email    = data['email']
+            password = data['password']
+            nickname = data['nickname']
+            phone    = data['phone']
 
 
             if User.objects.filter(email=email).exists():
@@ -32,43 +32,13 @@ class SignUpView(View):
                 return JsonResponse({'MESSAGE' : 'INVALID PHONE NUMBER'}, status=400)
 
             User.objects.create(
-                email       = email,
-                password    = password,
-                nickname    = nickname,
-                phone       = phone
+                email    = email,
+                password = password,
+                nickname = nickname,
+                phone    = phone
             )
 
             return JsonResponse({'MESSAGE' : 'SUCCESS'}, status=200)
 
         except KeyError:
             return JsonResponse({'MESSAGE' : 'KEY ERROR'}, status=400)
-
-
-class SignInView(View):
-    def post(self, request):
-        try:
-            data = json.loads(request.body)
-
-            account = data['account']
-            password = data['password']
-
-
-            if email_validator(account):
-                user = User.objects.get(email=account)
-            elif phone_validator(account):
-                user = User.objects.get(phone=account)
-            else:
-                user = User.objects.get(nickname=account)
-            
-
-            if not user:
-                return JsonResponse({'MESSSAGE' : 'INVALID USER'}, status=401)
-            
-            if user.password != password:
-                return JsonResponse({'MESSAGE' : 'WRONG PASSWORD'}, status=401)
-            
-
-        except KeyError:
-            return JsonResponse({'MESSAGE' : 'KEY ERROR'}, status=400)
-        else:
-            return JsonResponse({'MESSAGE' : 'SUCCESS'}, status=200)
