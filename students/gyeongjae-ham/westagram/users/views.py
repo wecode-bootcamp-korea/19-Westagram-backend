@@ -12,21 +12,21 @@ class SignUpView(View):
         try:
             if User.objects.filter(email=data['email']).exists():
                 return JsonResponse({'MESSAGE':'DUPLICATED_EMAIL'}, status=400)
-            elif User.objects.filter(name=data['name']).exists():
+            if User.objects.filter(name=data['name']).exists():
                 return JsonResponse({'MESSAGE':'DUPLICATED_NAME'}, status=400)
-            elif User.objects.filter(number=data['number']).exists():
+            if User.objects.filter(number=data['number']).exists():
                 return JsonResponse({'MESSAGE':'DUPLICATED_NUMBER'}, status=400)
-            elif not validator_email(data['email']):
+            if not validator_email(data['email']):
                 return JsonResponse({'MESSAGE':'INVALIED_EMAIL'}, status=400)
-            elif not validator_password(data['password']):
+            if not validator_password(data['password']):
                 return JsonResponse({'MESSAGE':'INVALIED_PASSWORD'}, status=400)
-            elif not validator_number(data['number']):
+            if not validator_number(data['number']):
                 return JsonResponse({'MESSAGE':'INVALIED_NUMBER'}, status=400)
 
             User.objects.create(
             name     = data['name'],
             email    = data['email'],
-            number   = data['number'],
+            phone    = data['phone'],
             password = data['password']
             )
             return JsonResponse({'MESSAGE': 'SUCCESS'}, status=200)
@@ -35,14 +35,14 @@ class SignUpView(View):
             return JsonResponse({"MESSAGE": "KEY_ERROR"}, status=400)
 
 class LoginView(View):
-    def get(self, request):
+    def post(self, request):
         data = json.loads(request.body)
         try:
             if User.objects.filter(email=data['email']).exists() == False:
                 return JsonResponse({'MESSAGE':'INVALIED_USER'}, status=401)
-            elif User.objects.filter(password=data['password']).exists() == False:
+            if User.objects.filter(password=data['password']).exists() == False:
                 return JsonResponse({'MESSAGE':'INVALID_USER'}, status=401)
-            elif User.objects.filter(email=data['email']).exists():
+            if User.objects.filter(email=data['email']).exists():
                 User.objects.get(email=data['email'])
                 if User.objects.filter(password=data['password']).exists():
                     return JsonResponse({'MESSAGE':'SUCCESS'}, status=200)
