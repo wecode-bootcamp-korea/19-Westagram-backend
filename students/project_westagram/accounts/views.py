@@ -13,55 +13,73 @@ class SignupView(View):
         data     = json.loads(request.body)
         accounts = Accounts.objects.all()
         
-        id_validation    = re.compile('^[a-zA-Z0-9+-_.]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$')
-        pw_validation    = re.compile('[(<`~!@#$%^&*,./?;:>)]+')
-        phone_validation = re.compile('[0-9]')
+        email_validation    = re.compile('^[a-zA-Z0-9+-_.]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$')
+        password_validation = re.compile('[(<`~!@#$%^&*,./?;:>)]+')
+        phone_validation    = re.compile('[0-9]')
         
-        # ID Validation check. 1st if > 중복 확인
-        if Accounts.objects.filter(user_id = data['user_id']).exists():
-            return JsonResponse({'message': 'KEY_ERROR ID already exist'}, status = 400)
-        #  2nd if > E-mail 형식 확인
-        if not id_validation.match(data['user_id']):
-            return JsonResponse({'message': 'KEY_ERROR Invalid ID'}, status = 400)
-
-        # Password Validation check. 1st if > 비밀번호 길이 확인
-        if len(data['user_pw']) < 8 or len(data['user_pw']) > 30:
-            return JsonResponse({'message': 'KEY_ERROR Password too short!'}, status = 400)
-        # 2nd if > 비밀번호 복잡도 확인1, 
-        if not re.findall('[a-zA-Z]+', data['user_pw']) or not re.findall('[0-9]+', data['user_pw']):
-            return JsonResponse({'message': 'KEY_ERROR Invalid Password(각 하나 이상의 소문자, 대문자, 숫자를 포함하세요)'}, status = 400)
-        # 3rd if > 비밀번호 복잡도 확인2
-        if not pw_validation.findall(data['user_pw']):
-            return JsonResponse({'message': 'KEY_ERROR Invalid Password(하나 이상의 특수문자를 포함하세요)'}, status = 400)
+        max_password = Accounts.max_password
+        min_password = Accounts.min_password
+        max_phone    = Accounts.max_phone
+        min_phone    = Accounts.min_phone
         
-        # Phone number Validation check. 1st if > 전화번호 길이 및 전화번호 형식 확인
-        if (len(data['user_phone']) > 11 or len(data['user_phone']) < 10) and not phone_validation.match(data['user_phone']):
-            return JsonResponse({'message': 'KEY_ERROR Wrong PHONE number'}, status = 400)
-        # 2nd if > 전화번호 중복 확인
-        if Accounts.objects.filter(user_phone = data['user_phone']).exists():
-            return JsonResponse({'message': 'KEY_ERROR PHONE number already exist'}, status = 400)
+        try:
+            if Accounts.objects.filter(email = data['email']).exists():
+                return JsonResponse({'message': 'KEY_ERROR E-mail already exist'}, status = 400)
+            if not email_validation.match(data['email']):
+                return JsonResponse({'message': 'KEY_ERROR Invalid E-mail'}, status = 400)
 
-        Accounts.objects.create(user_id       = data['user_id'],
-                                user_pw       = data['user_pw'],
-                                user_name     = data['user_name'],
-                                user_phone    = data['user_phone'],
-                                )
+            if len(data['password']) < min_password or len(data['password']) > max_password:
+                return JsonResponse({'message': 'KEY_ERROR Password too short!'}, status = 400)
+            if not re.findall('[a-zA-Z]+', data['password']) or not re.findall('[0-9]+', data['password']):
+                return JsonResponse({'message': 'KEY_ERROR Invalid Password(각 하나 이상의 소문자, 대문자, 숫자를 포함하세요)'}, status = 400)
+            if not password_validation.findall(data['password']):
+                return JsonResponse({'message': 'KEY_ERROR Invalid Password(하나 이상의 특수문자를 포함하세요)'}, status = 400)
             
-        return JsonResponse({"message": "Sign up complete!"}, status = 201)
+            if (len(data['phone']) > max_phone or len(data['phone']) < min_phone) and not phone_validation.match(data['phone']):
+                return JsonResponse({'message': 'KEY_ERROR Wrong PHONE number'}, status = 400)
+            if Accounts.objects.filter(phone = data['phone']).exists():
+                return JsonResponse({'message': 'KEY_ERROR PHONE number already exist'}, status = 400)
+
+            Accounts.objects.create(email    = data['email'],
+                                    password = data['password'],
+                                    name     = data['name'],
+                                    phone    = data['phone'],
+                                    )
+                
+            return JsonResponse({"message": "Sign up complete!"}, status = 201)
+        except KeyError as ke:
+            return JsonResponse({'message': f'KeyError! {ke} is incorrect'}, status = 400)
 
 # 로그인 뷰
 class LoginView(View):
-
-    def post(self, request):
-        data = json.loads(request.body)
+    pass
+#     def post(self, request):
+#         data = json.loads(request.body)
         
-        id_validation = re.compile('^[a-zA-Z0-9+-_.]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$')
+#         email_validation = re.compile('^[a-zA-Z0-9+-_.]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$')
+#         phone_validation = re.compile('[0-9]')
         
-        if not id_validation.match(data['user_id']):
-            return JsonResponse({'message': 'Invalid ID'}, status = 400)
-        if not Accounts.objects.filter(user_id = data['user_id']).exists():
-            return JsonResponse({'message': 'ID doesn\'t exist'}, status = 400)
-        elif data['user_pw'] == Accounts.objects.get(user_id = data['user_id']).user_pw:
-            return JsonResponse({'message': 'Log in Successful'}, status = 200)
-        else:
-            return JsonResponse({'message': 'Wrong Password'}, status = 400)
+#         try:
+#             if not email_validation.match(data['email']):
+#                 return JsonResponse({'message': 'Invalid USER, ID should be email or phone number'}, status = 401)
+        
+#             if not Accounts.objects.filter(email = data['email']).exists():
+#                 return JsonResponse({'message': 'Invalid USER, E-mail doesn\'t exist'}, status = 401)
+#             elif data['user_pw'] == Accounts.objects.get(email = data['email']).user_pw:
+#                 return JsonResponse({'message': 'Log in SUCCESS'}, status = 200)
+#             else:
+#                 return JsonResponse({'message': 'Wrong Password'}, status = 401)
+        
+#         except SyntaxError:
+#             if not phone_validation.match(data['user_phone']):
+#                 return JsonResponse({'message': 'Invalid USER, ID should be email or phone number'}, status = 401)
+            
+#             if not Accounts.objects.filter(user_phone = data['user_phone']).exists():
+#                 return JsonResponse({'message': 'Invalid USER, ID doesn\' exist'}, status = 401)
+#             elif data['user_pw'] == Accounts.objects.get(user_phone = data['user_phone']).user_pw:
+#                 return JsonResponse({'message': 'Log in SUCCESS'}, status = 200)
+#             else:
+#                 return JsonResponse({'message': 'Wrong Password'}, status = 401)
+            
+#         except:
+#             return JsonResponse({'message': 'KEY ERROR'}, status = 400)
