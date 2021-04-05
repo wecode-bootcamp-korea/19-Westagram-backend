@@ -52,34 +52,44 @@ class SignupView(View):
 
 # 로그인 뷰
 class LoginView(View):
-    pass
-#     def post(self, request):
-#         data = json.loads(request.body)
+    
+    def post(self, request):
+        data = json.loads(request.body)
         
-#         email_validation = re.compile('^[a-zA-Z0-9+-_.]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$')
-#         phone_validation = re.compile('[0-9]')
+        email_validation = re.compile('^[a-zA-Z0-9+-_.]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$')
+        phone_validation = re.compile('[0-9]')
         
-#         try:
-#             if not email_validation.match(data['email']):
-#                 return JsonResponse({'message': 'Invalid USER, ID should be email or phone number'}, status = 401)
-        
-#             if not Accounts.objects.filter(email = data['email']).exists():
-#                 return JsonResponse({'message': 'Invalid USER, E-mail doesn\'t exist'}, status = 401)
-#             elif data['user_pw'] == Accounts.objects.get(email = data['email']).user_pw:
-#                 return JsonResponse({'message': 'Log in SUCCESS'}, status = 200)
-#             else:
-#                 return JsonResponse({'message': 'Wrong Password'}, status = 401)
-        
-#         except SyntaxError:
-#             if not phone_validation.match(data['user_phone']):
-#                 return JsonResponse({'message': 'Invalid USER, ID should be email or phone number'}, status = 401)
-            
-#             if not Accounts.objects.filter(user_phone = data['user_phone']).exists():
-#                 return JsonResponse({'message': 'Invalid USER, ID doesn\' exist'}, status = 401)
-#             elif data['user_pw'] == Accounts.objects.get(user_phone = data['user_phone']).user_pw:
-#                 return JsonResponse({'message': 'Log in SUCCESS'}, status = 200)
-#             else:
-#                 return JsonResponse({'message': 'Wrong Password'}, status = 401)
-            
-#         except:
-#             return JsonResponse({'message': 'KEY ERROR'}, status = 400)
+        try:
+            if request_email := data.get('email'):
+                if not email_validation.match(request_email):
+                    return JsonResponse({'message': f'Invalid USER, {request_email} is not email form'}, status = 401)
+                if Accounts.objects.filter(email = request_email).exists():
+                    if Accounts.objects.get(email = request_email).password == data['password']:
+                        return JsonResponse({'message': 'Log in SUCCESS'}, status = 200)
+                    else:
+                        return JsonResponse({'message': 'Wrong PASSWORD'}, status = 200)
+                else:
+                    return JsonResponse({'message': f'Invalid USER, {request_email} doesn\'t exist'}, status = 401)
+                
+            if request_name := data.get('name'):
+                if Accounts.objects.filter(name = request_name).exists():
+                    if data["password"] == Accounts.objects.get(name = request_name).password:
+                        return JsonResponse({'message': 'Log in SUCCESS'}, status = 200)
+                    else:
+                        return JsonResponse({'message': 'Wrong PASSWORD'}, status = 200)
+                else:
+                    return JsonResponse({'message': f'Invalid USER, {request_name} doesn\'t exist'}, status = 401)
+                
+            if request_phone := data.get('phone'):
+                if not phone_validation.match(request_phone):
+                    return JsonResponse({'message': f'Invalid USER, Your phone \'{request_phone}\' is worng number'}, status = 401)
+                if Accounts.objects.filter(phone = request_phone).exists():
+                    if Accounts.objects.get(phone = request_phone).password == data['password']:
+                        return JsonResponse({'message': 'Log in SUCCESS'}, status = 200)
+                    else:
+                        return JsonResponse({'message': 'Wrong PASSWORD'}, status = 200)
+                else:
+                    return JsonResponse({'message': f'Invalid USER, Your phone \'{request_phone}\' doesn\'t exist'}, status = 401)
+                
+        except Exception as er:
+            return JsonResponse({'message': f"KEY ERROR, {er} is WRONG"}, status = 401)
