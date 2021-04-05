@@ -25,3 +25,5 @@ class UserView(View):
                 password = data['password'],
             )
             return JsonResponse({'MESSAGE': 'SUCCESS'}, status=201)
+
+
