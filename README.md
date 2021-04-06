@@ -38,7 +38,7 @@
 - [Posting] 게시물 올리기
 - [User] 회원가입시 email, password validation
     - email: '@' 포함하였는지 검사
-    - password: 5글자 이상인지 검사
+    - password: 8글자 이상인지 검사
 - [User] 다른 회원 follow 하기 엔드포인트
 
 ## 위코드 파이썬 코딩 컨벤션
