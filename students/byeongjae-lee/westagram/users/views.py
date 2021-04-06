@@ -41,7 +41,7 @@ class SignUpView(View):
         
         check_email    = re.compile('^(\w|\.|\_|\-)+[@](\w|\_|\-|\.)+[.]\w{2,3}$')
         valid_email    = re.search(check_email, data['email'])
-        check_password = re.compile('^(?!.*\s)(?=.*[A-Z])(?=.*\d)(?=.*[a-z])(?=.*[!@#$%&*])')
+        check_password = re.compile('^(?=.*[A-Z])(?=.*\d)(?=.*[a-z])(?=.*[!@#$%&*])(\S){8,}$')
         valid_password = re.search(check_password, data['password'])
         hashed_password = bcrypt.hashpw(data['password'].encode('utf-8'), bcrypt.gensalt())
         password = hashed_password.decode('utf-8')
@@ -56,8 +56,11 @@ class SignUpView(View):
                 if not valid_email:
                     raise InvalidEmail()
                 
-                elif (len(data['password']) <= 8) or not valid_password:
+                elif not valid_password:
                     raise InvalidPassword()
+                
+                elif User.objects.filter(email=data['email']):
+                    raise DuplicateEmail()
                 
                 elif 'phone_number' in data:
                     phone_number = str(data['phone_number'])
@@ -89,9 +92,6 @@ class SignUpView(View):
                     )
                     message     = 'SUCCESS'
                     status_code = 201
-                
-                elif User.objects.filter(email=data['email']):
-                    raise DuplicateEmail()
                 
                 elif ('email' and 'phone_number' and 'user_id') in data:
                     User.objects.create(
