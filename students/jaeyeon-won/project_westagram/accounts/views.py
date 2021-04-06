@@ -1,5 +1,6 @@
 import json
 import re
+import bcrypt
 
 from django.views import View
 from django.http  import JsonResponse
@@ -16,6 +17,7 @@ class SignupView(View):
             email               = data['email']
             username            = data ['username']
             password            = data['password']
+            hashed_password     = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
             email_vaildation    = re.match('[a-zA-Z0-9._+-]+@[a-z0-9-]+\.[a-z.]+',email)
             password_vaildation = re.match('^(?=.*[a-zA-Z0-9.,-]).{8,}$',password)
             
@@ -42,9 +44,9 @@ class SignupView(View):
                 phone_number = phone_number,
                 email        = email,
                 username     = username,
-                password     = password
+                password     = hashed_password
                 )
-            return JsonResponse({'message' : 'All done!'}, status = 201)
+            return JsonResponse({'message' : 'Success!'}, status = 201)
         except KeyError:
             return JsonResponse({'message':'KEY ERROR'}, status = 400)
 
@@ -57,18 +59,28 @@ class SigninView(View):
             email        = data['email']
             password     = data['password']
 
-            if User.objects.filter(email=email).exists() or User.objects.filter(username=username).exists() or User.objects.filter(phone_number=phone_number).exists():    
-                if password =='':
+            if password =='' or (email=='' and username=='' and phone_number==''):
                     return JsonResponse({'message': 'Check your Input'},status = 401)
 
-                if User.objects.filter(password=password).exists():
-                    return JsonResponse({'message': 'All done!'}, status = 200)
+            if User.objects.filter(email=email).exists():               
+                if bcrypt.checkpw(password.encode('utf-8'), User.objects.get(email=email).password.encode('utf-8')):
+                    return JsonResponse({'message': 'Success!'}, status = 200)
+                else:
+                    return JsonResponse({'message': 'Check your password'}, status = 401)
 
+            if User.objects.filter(username=username).exists():
+                if bcrypt.checkpw(password.encode('utf-8'), User.objects.get(username=username).password.encode('utf-8')):
+                    return JsonResponse({'message': 'Success!'}, status = 200)
+                else:
+                    return JsonResponse({'message': 'Check your password'}, status = 401)
+
+            if User.objects.filter(phone_number=phone_number).exists():
+                if bcrypt.checkpw(password.encode('utf-8'), User.objects.get(phone_number=phone_number).password.encode('utf-8')):
+                    return JsonResponse({'message': 'Success!'}, status = 200)
                 else:
                     return JsonResponse({'message': 'Check your password'}, status = 401)
 
             else:
                 return JsonResponse({'message': 'Check your ID'}, status = 401)
-
         except KeyError:
             return JsonResponse({'message': 'KEY ERROR'},status = 400)
