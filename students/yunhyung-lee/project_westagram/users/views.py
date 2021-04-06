@@ -1,6 +1,6 @@
 import json
-from django.db.models.fields import EmailField
 
+from django.db.models.fields import EmailField
 from django.http    import JsonResponse
 from django.views   import View
 
