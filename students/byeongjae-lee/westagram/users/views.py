@@ -14,16 +14,15 @@ class SignUpView(View):
         email        = data['email']
         phone_number = data['phone_number']
 
-        check_email     = re.compile('^(\w|\.|\_|\-)+[@](\w|\_|\-|\.)+[.]\w{2,3}$')
-        valid_email     = re.search(check_email, email)
-        check_password  = re.compile('^(?=.*[A-Z])(?=.*\d)(?=.*[a-z])(?=.*[!@#$%&*])(\S){8,}$')
-        valid_password  = re.search(check_password, data['password'])
-        hashed_password = bcrypt.hashpw(data['password'].encode('utf-8'), bcrypt.gensalt())
-        password        = hashed_password.decode('utf-8')
         
         try:
             if 'email' not in data or 'password' not in data:
                 return JsonResponse({'message': 'KEY_ERROR'}, status=400)
+            
+            check_email    = re.compile('^(\w|\.|\_|\-)+[@](\w|\_|\-|\.)+[.]\w{2,3}$')
+            valid_email    = re.search(check_email, email)
+            check_password = re.compile('^(?=.*[A-Z])(?=.*\d)(?=.*[a-z])(?=.*[!@#$%&*])(\S){8,}$')
+            valid_password = re.search(check_password, data['password'])
             
             if not valid_email:
                 return JsonResponse({'message': 'VALID_EMAIL'}, status=400)
@@ -31,18 +30,21 @@ class SignUpView(View):
             if not valid_password:
                 return JsonResponse({'message': 'VALID_PASSWORD'}, status=400)
                 
-            if User.objects.filter(email=email):
+            if User.objects.filter(email=email).exists:
                 return JsonResponse({'message': 'DUPLICATE_EMAIL'}, status=400)
                 
-            if User.objects.filter(name=name):
+            if User.objects.filter(name=name).exists:
                 return JsonResponse({'message': 'DUPLICATE_NAME'})
     
             if not phone_number.isdigit():
                 return JsonResponse({'message': 'INVALID_PHONE_NUMBER'}, status=400)
                     
-            if User.objects.filter(phone_number=phone_number): 
+            if User.objects.filter(phone_number=phone_number).exists: 
                 return JsonResponse({'message': 'DUPLICATE_PHONE_NUMBER'}, status=400)
                 
+            hashed_password = bcrypt.hashpw(data['password'].encode('utf-8'), bcrypt.gensalt())
+            password        = hashed_password.decode('utf-8')
+            
             User.objects.create(
                     name         = name,
                     email        = email,
