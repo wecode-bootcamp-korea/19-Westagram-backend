@@ -32,8 +32,8 @@ class SignUpView(View):
             
             if User.objects.filter(
                 Q(email=email)|
-                Q(name=data.get('name'))|
-                Q(phone_number=data.get('phone_number'))).exists():
+                Q(name=data['name'])|
+                Q(phone_number=data['phone_number'])).exists():
                 return JsonResponse({'message': 'DUPLICATE_ACCOUNT'}, status=400)
             
             if not data['phone_number'].isdigit():
@@ -44,10 +44,10 @@ class SignUpView(View):
             name            = data['name']
             
             User.objects.create(
-                    name         = data.get('name'),
+                    name         = data['name'],
                     email        = email,
                     password     = password,
-                    phone_number = data.get('phone_number') 
+                    phone_number = data['phone_number'] 
                 )
             return JsonResponse({'message': 'SUCCESS'}, status=201)
         
