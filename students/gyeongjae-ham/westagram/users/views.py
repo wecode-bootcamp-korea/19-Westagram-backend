@@ -10,7 +10,6 @@ from .validation import validator_email, validator_phone, validator_password
 class SignUpView(View):
     def post(self, request):
         data = json.loads(request.body)
-        hashed_password = bcrypt.hashpw(data['password'].encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
         try:
             if User.objects.filter(email=data['email']).exists():
                 return JsonResponse({'MESSAGE':'DUPLICATED_EMAIL'}, status=400)
@@ -29,6 +28,8 @@ class SignUpView(View):
 
             if not validator_phone(data['phone']):
                 return JsonResponse({'MESSAGE':'INVALIED_NUMBER'}, status=400)
+
+            hashed_password = bcrypt.hashpw(data['password'].encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
             User.objects.create(
             name     = data['name'],
