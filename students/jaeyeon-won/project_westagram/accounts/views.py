@@ -49,7 +49,7 @@ class SignupView(View):
                 password     = hashed_password
                 )
             return JsonResponse({'message' : 'Success!'}, status = 201)
-            
+
         except KeyError:
             return JsonResponse({'message':'KEY ERROR'}, status = 400)
 
@@ -57,37 +57,27 @@ class SigninView(View):
     def post(self,request):
         data = json.loads(request.body)
         try:
-            username     = data['username']
-            phone_number = data['phone_number']
-            email        = data['email']
-            password     = data['password']
+            user     = data['user']
+            password = data['password']
 
-            if password =='' or (email=='' and username=='' and phone_number==''):
-                    return JsonResponse({'message': 'Check your Input'},status = 401)
+            if User.objects.filter(username=user).exists():
+                user = User.objects.get(username=user)
 
-            if User.objects.filter(email=email).exists():               
-                if bcrypt.checkpw(password.encode('utf-8'), User.objects.get(email=email).password.encode('utf-8')):
-                    token = jwt.encode({'user_id': User.objects.get(email=email).id}, 'secret', algorithm='HS256')
-                    return JsonResponse({'token' : token}, status=200)
-                else:
-                    return JsonResponse({'message': 'Check your password'}, status = 401)
+            elif User.objects.filter(email=user).exists():
+                user = User.objects.get(email=user)
 
-            if User.objects.filter(username=username).exists():
-                if bcrypt.checkpw(password.encode('utf-8'), User.objects.get(username=username).password.encode('utf-8')):
-                    token = jwt.encode({'user_id': User.objects.get(username=username).id}, 'secret', algorithm='HS256')
-                    return JsonResponse({'token' : token}, status=200)
-                else:
-                    return JsonResponse({'message': 'Check your password'}, status = 401)
-
-            if User.objects.filter(phone_number=phone_number).exists():
-                if bcrypt.checkpw(password.encode('utf-8'), User.objects.get(phone_number=phone_number).password.encode('utf-8')):
-                    token = jwt.encode({'user_id': User.objects.get(phone_number=phone_number).id}, 'secret', algorithm='HS256')
-                    return JsonResponse({'token' : token}, status=200)
-                else:
-                    return JsonResponse({'message': 'Check your password'}, status = 401)
+            elif User.objects.filter(phone_number=user).exists():
+                user = User.objects.get(phone_number=user)
 
             else:
-                return JsonResponse({'message': 'Check your ID'}, status = 401)
+                return JsonResponse({'message': 'Check your ID'},status = 401)
+         
+            if bcrypt.checkpw(password.encode('utf-8'), user.password.encode('utf-8')):
+                token = jwt.encode({'user_id': user.id}, 'secret', algorithm='HS256')
+                return JsonResponse({'token' : token, 'message': 'Success!'}, status=200)
+
+            else:
+                return JsonResponse({'message': 'Check your password'}, status = 401)
 
         except KeyError:
             return JsonResponse({'message': 'KEY ERROR'},status = 400)
