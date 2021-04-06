@@ -14,9 +14,9 @@ def validator_email(email):
         return True
     return False
 
-def validator_number(number):
+def validator_phone(phone):
     validator = re.compile('^\d{9,11}$')
 
-    if validator.match(number):
+    if validator.match(phone):
         return True
     return False
