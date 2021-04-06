@@ -8,25 +8,32 @@ from users.models import User
 
 class SignUpView(View):
     def post(self, request):
-        data = json.loads(request.body)
+        # data = json.loads(request.body)
         user_db = User.objects.all()
+        PASSWORD_LENGTH = 8  # 편의상 상수처리.
 
         try:
-            if not data['id'] or not data['password']:
-                return JsonResponse({'message': 'id & password are required'}, status=400)
+            data = json.loads(request.body)
 
-            if user_db.filter(id=data['id']).exists():
-                return JsonResponse({'message': 'id already exists!'}, status=400)
+            if not "@" in data['email'] or not "." in data['email']:
+                return JsonResponse({'message': 'use valid email'}, status=400)
 
-            elif user_db.filter(email=data['email']).exists():
-                return JsonResponse({'message': 'email already exists!'}, status=400)
+            if user_db.filter(email=data['email']).exists():
+                return JsonResponse({'message': 'This email already exists!'}, status=400)
 
-            elif user_db.filter(phone_number=data['phone_number']).exists():
-                return JsonResponse({'message': 'phone number already exists!'}, status=400)
+            if not data['email'] or not data['password']:
+                return JsonResponse({'message': 'email & password are required'}, status=400)
 
-            else:
-                User.objects.create(id=data['id'], email=data['email'], phone_number=data['phone_number'])
-                return JsonResponse({'message': 'SUCCESS'}, status=200)
+            if len(data['password']) < PASSWORD_LENGTH:
+                return JsonResponse({'message': 'use stronger password'}, status=400)
+
+            User.objects.create(
+                email=data['email'],
+                password=data['password'],
+                phone_number=data['phone_number']
+            )
+            return JsonResponse({'message': 'SUCCESS'}, status=200)
+
 
         except KeyError:
             return JsonResponse({'message': 'KEY_ERROR'}, status=400)
