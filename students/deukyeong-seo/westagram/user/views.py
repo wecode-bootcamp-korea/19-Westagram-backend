@@ -28,8 +28,6 @@ class SignUp(View):
                     email    = data['email'],
                     password = data['password']
                     )
-
-
             return JsonResponse({'message':'SUCCESS'}, status=201)
 
         except KeyError:
