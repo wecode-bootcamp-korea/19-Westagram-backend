@@ -1,6 +1,7 @@
 import json
 import re
 import bcrypt
+import jwt
 
 from django.views import View
 from django.http  import JsonResponse
@@ -17,7 +18,6 @@ class SignupView(View):
             email               = data['email']
             username            = data ['username']
             password            = data['password']
-            hashed_password     = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
             email_vaildation    = re.match('[a-zA-Z0-9._+-]+@[a-z0-9-]+\.[a-z.]+',email)
             password_vaildation = re.match('^(?=.*[a-zA-Z0-9.,-]).{8,}$',password)
             
@@ -39,6 +39,8 @@ class SignupView(View):
             if User.objects.filter(email = email).exists():
                 return JsonResponse({'message' : 'Already exists email'}, status = 400)
 
+            hashed_password     = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+            
             User.objects.create(
                 name         = name,
                 phone_number = phone_number,
