@@ -59,7 +59,7 @@ class SignUpView(View):
                     email = email,
                     name = name,
                     nickname = nickname,
-                    password = hashed_password,
+                    password = password,
                     )
 
             return JsonResponse({'MESSAGE':'SUCCESS'}, status=201)
@@ -69,32 +69,33 @@ class SignUpView(View):
 
 class SignInView(View):
     def post(self, request):
-        data = json.loads(request.body)
-        password      = data.get('password', None)
-        mobile_number = data.get('mobile_number', None)
-        email = data.get('email', None)
-        nickname = data.get('nickname', None)
+        try:
+            data = json.loads(request.body)
+            password      = data.get('password', None)
+            mobile_number = data.get('mobile_number', None)
+            email = data.get('email', None)
+            nickname = data.get('nickname', None)
 
-        user_queryset = User.objects.filter(password=password)
-
-        if not ((mobile_number or email or nickname) and password):
-            return JsonResponse({'MESSAGE':'KEY_ERROR'}, status=400)
+            if not ((mobile_number or email or nickname) and password):
+                return JsonResponse({'MESSAGE':'KEY_ERROR'}, status=400)
         
-        if user_queryset.exists():
-            if mobile_number:
-                if not User.objects.filter(mobile_number = mobile_number) or not User.objects.filter(password=password):
-                    return JsonResponse({'MESSAGE':'INVALID_USER'}, status=401)
-                else:
-                    return JsonResponse({'MESSAGE':'SUCCESS'}, status=200)
-            if email:
-                if not User.objects.filter(email= email) or not User.objects.filter(password=password):
-                    return JsonResponse({'MESSAGE':'INVALID_USER'}, status=401)
-                else:
-                    return JsonResponse({'MESSAGE':'SUCCESS'}, status=200)
-            if nickname:
-                if not User.objects.filter(nickname = nickname) or not User.objects.filter(password = password):
-                    return JsonResponse({'MESSAGE':'INVALID_USER'}, status=401)
-                else:
-                    return JsonResponse({'MESSAGE':'SUCCESS'}, status=200)
-        else:
-            return JsonResponse({'MESSAGE':'PASSWORD_ERROR'}, status=401)
+            if not User.objects.filter(
+                    Q(mobile_number = mobile_number) |
+                    Q(email = email) |
+                    Q(nickname = nickname)
+                    ).exists():
+                return JsonResponse({'MESSAGE':'INVALID_USER'}, status=401)
+                
+            user = User.objects.get(
+                    Q(mobile_number = mobile_number) |
+                    Q(email = email) |
+                    Q(nickname = nickname)
+                    )
+
+            if user.password != password:
+                return JsonResponse({'MESSAGE':'PASSWORD_ERROR'}, status=401)
+            else:
+                return JsonResponse({'MESSAGE':'SUCCESS'}, status=200)
+
+        except KeyError:
+            return JsonResponse({'MESSAGE':'KEY_ERROR'}, status=400)
