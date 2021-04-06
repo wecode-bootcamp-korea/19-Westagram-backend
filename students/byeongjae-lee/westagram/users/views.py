@@ -50,36 +50,49 @@ class SignUpView(View):
             
             if 'email' not in data or 'password' not in data:
                 raise KeyError()
+            
             else:
+                
                 if not valid_email:
                     raise InvalidEmail()
+                
                 elif (len(data['password']) <= 8) or not valid_password:
                     raise InvalidPassword()
+                
                 elif 'phone_number' in data:
                     phone_number = str(data['phone_number'])
+                    
                     if not phone_number.isdigit() or len(phone_number) > 11 or len(phone_number) < 10 or phone_number[0] != '0':
                         raise InvalidPhoneNumber
+                    
                     elif User.objects.filter(phone_number=phone_number): 
                         raise DuplicatePhoneNumber()
                     
                     User.objects.create(
+                        email=data['email'],
                         phone_number=phone_number,
                         password=password
                     )
                     message     = 'SUCCESS'
                     status_code = 201
+                
                 elif 'user_id' in data:
                     user_id = data['user_id']
+                    
                     if User.objects.filter(user_id=data['user_id']):
                         raise DuplicateUserId()
+                    
                     User.objects.create(
+                        email=data['email'],
                         user_id=user_id,
                         password=password
                     )
                     message     = 'SUCCESS'
                     status_code = 201
+                
                 elif User.objects.filter(email=data['email']):
                     raise DuplicateEmail()
+                
                 elif ('email' and 'phone_number' and 'user_id') in data:
                     User.objects.create(
                             user_id      = data['user_id'],
@@ -89,12 +102,13 @@ class SignUpView(View):
                         )
                     message     = 'SUCCESS'
                     status_code = 201
-                User.objects.create(
-                    email    = data['email'],
-                    password = password
-                )
-                message     = 'SUCCESS'
-                status_code = 201
+                else:
+                    User.objects.create(
+                        email    = data['email'],
+                        password = password
+                    )
+                    message     = 'SUCCESS'
+                    status_code = 201
         
         except KeyError:
             
@@ -144,8 +158,11 @@ class LoginView(View):
 
             if (('email' or 'user_id' or 'phone_number') and 'password') not in data:
                 raise KeyError()
+            
             else:
+                
                 password = data['password']
+                
                 if 'user_id' in data:
                     
                     user_id       = data['user_id']
@@ -153,8 +170,10 @@ class LoginView(View):
                     
                     if not user_id_check:
                         raise InvalidUser
+                    
                     elif bcrypt.checkpw(password.encode('utf-8'), user_id_check.get().password.encode('utf-8')):
                         return JsonResponse({'message': 'SUCCESS'}, status=200)
+                    
                     else:
                         raise InvalidUser
                     
@@ -165,8 +184,10 @@ class LoginView(View):
                     
                     if not email_check:
                         raise InvalidUser
+                    
                     elif bcrypt.checkpw(password.encode('utf-8'), email_check.get().password.encode('utf-8')):
                         return JsonResponse({'message': 'SUCCESS'}, status=200)
+                    
                     else:
                         raise InvalidUser
                     
@@ -177,8 +198,10 @@ class LoginView(View):
                     
                     if not phone_number_check:
                         raise InvalidUser
+                    
                     elif bcrypt.checkpw(password.encode('utf-8'), phone_number_check.get().password.encode('utf-8')):
                         return JsonResponse({'message': 'SUCCESS'}, status=200)
+                    
                     else:
                         raise InvalidUser
     
