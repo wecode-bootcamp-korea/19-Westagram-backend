@@ -1,10 +1,11 @@
 import json
+import bcrypt
 
-from django.http                import JsonResponse
-from django.views               import View
+from django.http  import JsonResponse
+from django.views import View
 
-from .models                    import User
-from .utils                     import validate_email, validate_password
+from .models      import User
+from .utils       import validate_email, validate_password
 
 
 class SignUp(View):
@@ -28,11 +29,13 @@ class SignUp(View):
             if User.objects.filter(nickname=nickname).exists():
                 return JsonResponse({'MESSAGE':'ALREADY_EXISTS_NICKNAME'}, status=400)
             
+            hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
             User.objects.create(
                 email    = email,
                 name     = name,
                 nickname = nickname, 
-                password = password
+                password = hashed_password
                 )
             return JsonResponse({'MESSAGE':'SUCCESS'}, status=200)
 
@@ -49,7 +52,9 @@ class SingIn(View):
             if not User.objects.filter(email=email).exists():
                 return JsonResponse({'MESSAGE':'INVALID_USER'}, status=401)
             
-            if not User.objects.get(email=email).password == password:
+            valid_password = User.objects.get(email=email).password.encode('utf-8')         
+
+            if not bcrypt.checkpw(password.encode('utf-8'), valid_password):
                 return JsonResponse({'MESSAGE':'INVALID_USER'}, status=401)
 
             return JsonResponse({'MESSAGE':'SUCCESS'}, status=200)
