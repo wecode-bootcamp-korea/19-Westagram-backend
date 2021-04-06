@@ -12,7 +12,7 @@ class SignUpView(View):
         data         = json.loads(request.body)
         name         = data['name']
         email        = data['email']
-        phone_number = str(data['phone_number'])
+        phone_number = data['phone_number']
 
         check_email     = re.compile('^(\w|\.|\_|\-)+[@](\w|\_|\-|\.)+[.]\w{2,3}$')
         valid_email     = re.search(check_email, email)
@@ -22,7 +22,6 @@ class SignUpView(View):
         password        = hashed_password.decode('utf-8')
         
         try:
-            
             if 'email' not in data or 'password' not in data:
                 return JsonResponse({'message': 'KEY_ERROR'}, status=400)
             
@@ -59,7 +58,6 @@ class LoginView(View):
     def post(self, request):
 
         try:
-            
             data = json.loads(request.body)
             password=data['password']
 
