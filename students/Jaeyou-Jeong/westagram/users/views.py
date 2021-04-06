@@ -7,7 +7,7 @@ from django.views import View
 from users.models import User
 from users.checks import email_validation
 
-class Sign(View):
+class Signup(View):
     def post(self, request):
         data = json.loads(request.body)
         PASSWORD_LENGTH = 8
@@ -34,23 +34,26 @@ class Sign(View):
         except KeyError:
             return JsonResponse({"message": "KEY_ERROR"}, status=400)
 
-class Login(View):
+class Signin(View):
     def post(self,request):
         data = json.loads(request.body)
         try:
-            if not data['email'] == "":
-                Login_User = User.objects.get(email=data['email'])
-            elif not data['user_name'] == "":
-                Login_User = User.objects.get(name=data['user_name'])
-            elif not data['phone_number'] == "":
-                Login_User = User.objects.get(phone_number=data['phone_number'])
+            if data['account']:
+                if User.objects.filter(email=data['account']).exists():
+                    Signin_User_Password = User.objects.get(email=data['account']).password
+                elif User.objects.filter(name=data['account']).exists():
+                    Signin_User_Password = User.objects.get(name=data['account']).password
+                elif User.objects.filter(phone_number=data['account']).exists():
+                    Signin_User_Password = User.objects.get(phone_number=data['account']).password
+                else:
+                    return JsonResponse({"message": "INVALID_USER"}, status=401)
             else:
-                return JsonResponse({"message": "INVALID_USER"}, status=401)
+                return JsonResponse({"message": "NO_VALUE_ERROR"}, status=400)
+            
+            if not data['password']:
+                return JsonResponse({"message": "NO_VALUE_ERROR"}, status=400)
 
-            if data['password'] == "":
-                return JsonResponse({"message": "KEY_ERROR"}, status=400)
-
-            if bcrypt.checkpw(data['password'].encode('utf-8'), Login_User.password.encode('utf-8')):
+            if bcrypt.checkpw(data['password'].encode('utf-8'), Signin_User_Password.encode('utf-8')):
                 return JsonResponse({"message": "SUCCESS"}, status=200)
             else:
                 return JsonResponse({"message": "INVALID_USER"}, status=401)
