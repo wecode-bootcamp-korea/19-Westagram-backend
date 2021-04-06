@@ -10,4 +10,3 @@ class Accounts(models.Model):
 
     class Meta:
         db_table = "accounts"
-
