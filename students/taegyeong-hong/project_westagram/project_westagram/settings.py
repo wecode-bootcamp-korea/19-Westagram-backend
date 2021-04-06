@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 """
 
 from pathlib import Path
-
+import my_settings
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -20,7 +20,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '1hk0_jn0kzyz^9pv-#s5aihn_$puh$q(f$ns2hj(#1u-$8+9%!'
+SECRET_KEY = my_settings.SECRET
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -76,16 +76,7 @@ WSGI_APPLICATION = 'project_westagram.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
-DATABASES = {
-    'default' : {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'users',
-        'USER': 'root',
-        'PASSWORD':'ubuntu',
-        'HOST': 'localhost',
-        'PORT': '3306',
-    }
-}
+DATABASES = my_settings.DATABASES
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
 
