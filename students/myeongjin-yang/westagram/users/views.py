@@ -14,24 +14,34 @@ class SignUpView(View):
         password_check     = 8
 
         try:
-            identity       = data['identity']
-            password       = data['password']
-            name           = data['name']
-            username       = data['username']
+            if 'email' in data:
+                email       = data['email']
+                if not email_check.match(email):
+                    return JsonResponse({'message':"Invalid ID"}, status=400)
+                if User.objects.filter(email=email).exists():
+                    return JsonResponse({'message':"existing ID"}, status=400)
 
-            if not email_check.match(identity) and not phonenumber_check.match(identity):
-                return JsonResponse({'message':"Invalid ID"}, status=400)
+            else:
+                phonenumber = data['phonenumber']
+                if not phonenumber_check.match(phonenumber):
+                    return JsonResponse({'message':"Invalid ID"}, status=400)
+                if User.objects.filter(phonenumber=phonenumber).exists():
+                    return JsonResponse({'message':"existing ID"}, status=400)
+
+            password        = data['password']
+            name            = data['name']
+            username        = data['username']
                         
             if len(password)<password_check:
                 return JsonResponse({'message':"Invalid PW"}, status=400)
 
             if User.objects.filter(username=username):
-                return JsonResponse({'message':"existing username"}, status=400)
+                return JsonResponse({'message':"existing username"}, status=400)            
             
-            if User.objects.filter(identity=identity):
-                return JsonResponse({'message':"existing ID"}, status=400)
-            
-            User.objects.create(identity=data['identity'], password=data['password'], name=data['name'], username=data['username'])
+            if 'email' in data: 
+                User.objects.create(email=data['email'], password=data['password'], name=data['name'], username=data['username'])
+            else:
+                User.objects.create(phonenumber=data['phonenumber'], password=data['password'], name=data['name'], username=data['username'])
             
             return JsonResponse({'message':"SUCCESS"}, status=200)
         
@@ -43,24 +53,34 @@ class SignInView(View):
     def post(self,request):
         data               = json.loads(request.body)
         try:
-            if 'identity' in data:
-                indentity = data['identity']
-                password  = data['password']
+            if 'email' in data:
+                email       = data['identity']
+                password    = data['password']
 
                 if User.objects.filter(identity=indentity).exists():
-                    user  = User.objects.get(identity=indentity)
+                    user = User.objects.get(identity=indentity)
                 else:
                     return JsonResponse({'message':"INVALID_USER"}, status=401)
 
             
-            else:
-                username  = data['username']
-                password  = data['password']
+            elif 'username' in data:
+                username    = data['username']
+                password    = data['password']
 
                 if User.objects.filter(username=username).exists():
-                    user  = User.objects.get(username=username)
+                    user = User.objects.get(username=username)
                 else:
                     return JsonResponse({'message':"INVALID_USER"}, status=401)
+            
+            else:
+                phonenumber = data['phonenumber']
+                password    = data['password']
+
+                if User.objects.filter(phonenumber=phonenumber).exists():
+                    user = User.objects.get(phonenumber=phonenumber)
+                else:
+                    return JsonResponse({'message':"INVALID_USER"}, status=401)
+
             
         except KeyError:
             return JsonResponse({'message':"KEY_ERROR"}, status=400)
