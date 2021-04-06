@@ -75,23 +75,27 @@ class LoginView(View):
         accounts = Accounts.objects.all()
         
         try:
-            # if request_id := data.get('email'):
-            #     if bcrypt.checkpw(data['password'].encode("utf-8"), Accounts.objects.get(email = request_id).password.encode('utf-8')):
-            #         return JsonResponse({'message': 'Log in SUCCESS'}, status = 400)
+            if request_id := data.get('email'):
+                if bcrypt.checkpw(data['password'].encode("utf-8"), accounts.get(email = request_id).password.encode('utf-8')):
+                    return JsonResponse({'message': 'Log in SUCCESS'}, status = 200)
             
-            # if request_id := data.get('phone'):
-            #     if bcrypt.checkpw(data['password'].encode("utf-8"), Accounts.objects.get(name = request_id).password.encode('utf-8')):
-            #         return JsonResponse({'message': 'Log in SUCCESS'}, status = 400)
-            
-            if accounts.filter(email = data["account"]).exists():
-                request_id = accounts.get(email = data.get('account'))
-            if accounts.filter(nickname = data['nickname']).exists():
-                request_id = accounts.get(email = data.get('account'))
-            if accounts.filter(phone = data['phone']).exists():
-                request_id = accounts.get(phone = data.get('account'))
+            if request_id := data.get('nickname'):
+                if bcrypt.checkpw(data['password'].encode("utf-8"), accounts.get(nickname = request_id).password.encode('utf-8')):
+                    return JsonResponse({'message': 'Log in SUCCESS'}, status = 200)
                 
-            if bcrypt.checkpw(data['password'].encode("utf-8"), accounts.get(name = request_id).password.encode('utf-8')):
-                return JsonResponse({'message': 'Log in SUCCESS'}, status = 400)
+            if request_id := data.get('phone'):
+                if bcrypt.checkpw(data['password'].encode("utf-8"), accounts.get(phone = request_id).password.encode('utf-8')):
+                    return JsonResponse({'message': 'Log in SUCCESS'}, status = 200)
+            
+            # if accounts.filter(email = data["account"]).exists():
+            #     request_id = accounts.get(email = data.get('account'))
+            # if accounts.filter(nickname = data['account']).exists():
+            #     request_id = accounts.get(nickname = data.get('account'))
+            # if accounts.filter(phone = data['account']).exists():
+            #     request_id = accounts.get(phone = data.get('account'))
+                
+            # if bcrypt.checkpw(data['password'].encode("utf-8"), request_id.password.encode('utf-8')):
+            #     return JsonResponse({'message': 'Log in SUCCESS'}, status = 200)
             
         except KeyError as error_source:
             return JsonResponse({'message': f"KEY ERROR, {error_source} is WRONG"}, status = 400)
