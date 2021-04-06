@@ -7,206 +7,82 @@ from django.http  import JsonResponse
 
 from .models      import User
 
-class KeyError(Exception):
-    pass
-
-class InvalidEmail(Exception):
-    pass
-
-class InvalidPhoneNumber(Exception):
-    pass
-
-class InvalidPassword(Exception):
-    pass
-
-class DuplicateEmail(Exception):
-    pass
-
-class DuplicateUserId(Exception):
-    pass
-
-class DuplicatePhoneNumber(Exception):
-    pass
-
-class InvalidUser(Exception):
-    pass
-
 class SignUpView(View):
-
     def post(self, request):
-        message     = ''
-        status_code = 400
-        data        = json.loads(request.body)
+        data         = json.loads(request.body)
+        name         = data['name']
+        email        = data['email']
+        phone_number = str(data['phone_number'])
 
-        
-        check_email    = re.compile('^(\w|\.|\_|\-)+[@](\w|\_|\-|\.)+[.]\w{2,3}$')
-        valid_email    = re.search(check_email, data['email'])
-        check_password = re.compile('^(?=.*[A-Z])(?=.*\d)(?=.*[a-z])(?=.*[!@#$%&*])(\S){8,}$')
-        valid_password = re.search(check_password, data['password'])
+        check_email     = re.compile('^(\w|\.|\_|\-)+[@](\w|\_|\-|\.)+[.]\w{2,3}$')
+        valid_email     = re.search(check_email, email)
+        check_password  = re.compile('^(?=.*[A-Z])(?=.*\d)(?=.*[a-z])(?=.*[!@#$%&*])(\S){8,}$')
+        valid_password  = re.search(check_password, data['password'])
         hashed_password = bcrypt.hashpw(data['password'].encode('utf-8'), bcrypt.gensalt())
-        password = hashed_password.decode('utf-8')
+        password        = hashed_password.decode('utf-8')
         
         try:
             
             if 'email' not in data or 'password' not in data:
-                raise KeyError()
+                return JsonResponse({'message': 'KEY_ERROR'}, status=400)
             
-            else:
+            if not valid_email:
+                return JsonResponse({'message': 'VALID_EMAIL'}, status=400)
                 
-                if not valid_email:
-                    raise InvalidEmail()
+            if not valid_password:
+                return JsonResponse({'message': 'VALID_PASSWORD'}, status=400)
                 
-                elif not valid_password:
-                    raise InvalidPassword()
+            if User.objects.filter(email=email):
+                return JsonResponse({'message': 'DUPLICATE_EMAIL'}, status=400)
                 
-                elif User.objects.filter(email=data['email']):
-                    raise DuplicateEmail()
-                
-                elif 'phone_number' in data:
-                    phone_number = str(data['phone_number'])
+            if User.objects.filter(name=name):
+                return JsonResponse({'message': 'DUPLICATE_NAME'})
+    
+            if not phone_number.isdigit():
+                return JsonResponse({'message': 'INVALID_PHONE_NUMBER'}, status=400)
                     
-                    if not phone_number.isdigit() or len(phone_number) > 11 or len(phone_number) < 10 or phone_number[0] != '0':
-                        raise InvalidPhoneNumber
-                    
-                    elif User.objects.filter(phone_number=phone_number): 
-                        raise DuplicatePhoneNumber()
-                    
-                    User.objects.create(
-                        email=data['email'],
-                        phone_number=phone_number,
-                        password=password
-                    )
-                    message     = 'SUCCESS'
-                    status_code = 201
+            if User.objects.filter(phone_number=phone_number): 
+                return JsonResponse({'message': 'DUPLICATE_PHONE_NUMBER'}, status=400)
                 
-                elif 'user_id' in data:
-                    user_id = data['user_id']
-                    
-                    if User.objects.filter(user_id=data['user_id']):
-                        raise DuplicateUserId()
-                    
-                    User.objects.create(
-                        email=data['email'],
-                        user_id=user_id,
-                        password=password
-                    )
-                    message     = 'SUCCESS'
-                    status_code = 201
-                
-                elif ('email' and 'phone_number' and 'user_id') in data:
-                    User.objects.create(
-                            user_id      = data['user_id'],
-                            email        = data['email'],
-                            password     = password,
-                            phone_number = phone_number 
-                        )
-                    message     = 'SUCCESS'
-                    status_code = 201
-                else:
-                    User.objects.create(
-                        email    = data['email'],
-                        password = password
-                    )
-                    message     = 'SUCCESS'
-                    status_code = 201
+            User.objects.create(
+                    name         = name,
+                    email        = email,
+                    password     = password,
+                    phone_number = phone_number 
+                )
+            return JsonResponse({'message': 'SUCCESS'}, status=201)
         
         except KeyError:
-            
-            message = 'KEY_ERROR'
-            status_code = 400
+            return JsonResponse({'meaasege': 'KEY_ERROR'}, status=400)
         
-        except InvalidEmail:
-            
-            message = 'INVALID_EMAIL'
-            status_code = 400
-        
-        except InvalidPassword:
-            
-            message = 'INVALID_PASSWORD'
-            status_code = 400
-        
-        except DuplicateUserId:
-            
-            message = 'Duplicate_User_ID'
-            status_code = 400
-        
-        except DuplicateEmail:
-            
-            message = 'Duplicate_Email'
-            status_code = 400
-        
-        except DuplicatePhoneNumber:
-            
-            message = 'Duplicate_Phone_Number'
-            status_code = 400
-        
-        except InvalidPhoneNumber:
-            
-            message = 'INVALID_Phone_Number'
-            status_code = 400
-
-
-        return JsonResponse({'message': message}, status=status_code)
-
 class LoginView(View):
-
     def post(self, request):
 
         try:
-
-            data = json.loads(request.body)
-
-            if (('email' or 'user_id' or 'phone_number') and 'password') not in data:
-                raise KeyError()
             
-            else:
+            data = json.loads(request.body)
+            password=data['password']
+
+            if user := User.objects.filter(name=data['account']):
                 
-                password = data['password']
+                if bcrypt.checkpw(password.encode('utf-8'),user.get().password.encode('utf-8')):
+                    return JsonResponse({'message': 'SUCCESS'}, status=200)
+
+                return JsonResponse({'message': 'INVALID_USER'}, status=401)
+            
+            if user := User.objects.filter(email=data['account']):
+
+                if bcrypt.checkpw(password.encode('utf-8'), user.get().password.encode('utf-8')):
+                    return JsonResponse({'message': 'SUCCESS'}, status=200)
                 
-                if 'user_id' in data:
+                return JsonResponse({'message': 'INVALID_USER'}, status=401)
                     
-                    user_id       = data['user_id']
-                    user_id_check = User.objects.filter(user_id=user_id)
-                    
-                    if not user_id_check:
-                        raise InvalidUser
-                    
-                    elif bcrypt.checkpw(password.encode('utf-8'), user_id_check.get().password.encode('utf-8')):
-                        return JsonResponse({'message': 'SUCCESS'}, status=200)
-                    
-                    else:
-                        raise InvalidUser
-                    
-                elif 'email' in data:
-                    
-                    email       = data['email']
-                    email_check = User.objects.filter(email=email)
-                    
-                    if not email_check:
-                        raise InvalidUser
-                    
-                    elif bcrypt.checkpw(password.encode('utf-8'), email_check.get().password.encode('utf-8')):
-                        return JsonResponse({'message': 'SUCCESS'}, status=200)
-                    
-                    else:
-                        raise InvalidUser
-                    
-                else:
-                    
-                    phone_number       = str(data['phone_number'])
-                    phone_number_check = User.objects.filter(phone_number=phone_number)
-                    
-                    if not phone_number_check:
-                        raise InvalidUser
-                    
-                    elif bcrypt.checkpw(password.encode('utf-8'), phone_number_check.get().password.encode('utf-8')):
-                        return JsonResponse({'message': 'SUCCESS'}, status=200)
-                    
-                    else:
-                        raise InvalidUser
+            if user := User.objects.filter(phone_number=data['account']):
     
+                if bcrypt.checkpw(password.encode('utf-8'), user.get().password.encode('utf-8')):
+                    return JsonResponse({'message': 'SUCCESS'}, status=200)
+                
+                return JsonResponse({'message': 'INVALID_USER'}, status=401)
+        
         except KeyError:
             return JsonResponse({'message': 'KEY_ERROR'}, status=400)
-        
-        except InvalidUser:
-            return JsonResponse({'message': 'INVALID_USER'}, status=401)
