@@ -23,23 +23,24 @@ class SignUpView(View):
             name         = data['name']
             nickname     = data['nickname']
 
-            if User.objects.filter(email=email).exists():
-                return JsonResponse({'MESSAGE':'EMAIL_ALREADY_EXIST'}, status=400)
-
             if not email_check.match(email):
                 return JsonResponse({'MESSAGE':'INVALID_EMAIL'}, status=400)
-
-            if User.objects.filter(phone_number=phone_number).exists():
-                return JsonResponse({'MESSAGE':'PHONE_NUMBER_ALREADY_EXIST'}, status=400)
 
             if not phone_number_check.match(phone_number):
                 return JsonResponse({'MESSAGE':'INVALID_PHONE_NUMBER'}, status=400)
 
+            if not password_check.match(password):
+                return JsonResponse({'MESSAGE':'INVALID_PASSWORD'}, status=400)
+
+            if User.objects.filter(email=email).exists():
+                return JsonResponse({'MESSAGE':'EMAIL_ALREADY_EXIST'}, status=400)
+
+            if User.objects.filter(phone_number=phone_number).exists():
+                return JsonResponse({'MESSAGE':'PHONE_NUMBER_ALREADY_EXIST'}, status=400)
+
             if User.objects.filter(nickname=nickname).exists():
                 return JsonResponse({'MESSAGE':'NICKNAME_ALREADY_EXIST'}, status=400)
 
-            if not password_check.match(password):
-                return JsonResponse({'MESSAGE':'INVALID_PASSWORD'}, status=400)
 
             salt = bcrypt.gensalt()
             hashed_password = bcrypt.hashpw(password.encode('utf-8'), salt)
