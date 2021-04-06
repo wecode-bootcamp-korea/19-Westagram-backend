@@ -1,5 +1,7 @@
 import json
 import re
+import bcrypt
+import jwt
 
 from django.http  import JsonResponse
 from django.views import View 
@@ -35,13 +37,15 @@ class SignUpView(View):
             if len(password)<password_check:
                 return JsonResponse({'message':"Invalid PW"}, status=400)
 
-            if User.objects.filter(username=username):
-                return JsonResponse({'message':"existing username"}, status=400)            
+            if User.objects.filter(username = username):
+                return JsonResponse({'message':"existing username"}, status=400)
+
+            hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())       
             
             if 'email' in data: 
-                User.objects.create(email=data['email'], password=data['password'], name=data['name'], username=data['username'])
+                User.objects.create(email = email, password = hashed_password.decode('utf-8'), name = name, username = username)
             else:
-                User.objects.create(phonenumber=data['phonenumber'], password=data['password'], name=data['name'], username=data['username'])
+                User.objects.create(phonenumber = phonenumber, password = hashed_password.decode('utf-8'), name = name, username = username)
             
             return JsonResponse({'message':"SUCCESS"}, status=200)
         
@@ -54,11 +58,11 @@ class SignInView(View):
         data               = json.loads(request.body)
         try:
             if 'email' in data:
-                email       = data['identity']
+                email       = data['email']
                 password    = data['password']
 
-                if User.objects.filter(identity=indentity).exists():
-                    user = User.objects.get(identity=indentity)
+                if User.objects.filter(email=email).exists():
+                    user = User.objects.get(email=email)
                 else:
                     return JsonResponse({'message':"INVALID_USER"}, status=401)
 
@@ -86,7 +90,7 @@ class SignInView(View):
             return JsonResponse({'message':"KEY_ERROR"}, status=400)
         
         else:
-            if user.password==password:
+            if bcrypt.checkpw(password.encode('utf-8'), user.password.encode('utf-8')):
                 return JsonResponse({'message':"SUCCESS"}, status=200)
             
             else:
