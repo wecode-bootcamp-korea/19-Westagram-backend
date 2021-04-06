@@ -1,4 +1,7 @@
 import json
+from json import decoder
+import bcrypt
+import jwt
 import re
 
 from django.http    import JsonResponse
@@ -28,7 +31,7 @@ class SignupView(View):
                 return JsonResponse({'message': f"E-mail({data['email']}) already exist"}, status = 400)
             if not email_validation.match(data['email']):
                 return JsonResponse({'message': f"{data['email']} is Invalid E-mail"}, status = 400)
-
+            
             if len(data['password']) < min_password or len(data['password']) > max_password:
                 return JsonResponse({'message': 'Password too short!'}, status = 400)
             if not re.search('[a-zA-Z]+', data['password']) or not re.search('[0-9]+', data['password']):
@@ -44,8 +47,10 @@ class SignupView(View):
             if accounts.filter(phone = data['phone']).exists():
                 return JsonResponse({'message': f"PHONE number({data['phone']}) already exist"}, status = 400)
 
+            encrypted_password = bcrypt.hashpw(data['password'].encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+            
             Accounts.objects.create(email    = data['email'],
-                                    password = data['password'],
+                                    password = encrypted_password,
                                     name     = data['name'],
                                     phone    = data['phone'],
                                     )
@@ -53,7 +58,7 @@ class SignupView(View):
             return JsonResponse({"message": "Sign up complete!"}, status = 201)
         
         except KeyError as error_source:
-            return JsonResponse({'message': f'KEY ERROR! {error_source} is incorrect'}, status = 400)
+            return JsonResponse({'message': f"KEY ERROR! '{error_source}' is incorrect"}, status = 400)
 
 # 로그인 뷰
 class LoginView(View):
