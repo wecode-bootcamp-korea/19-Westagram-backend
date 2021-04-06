@@ -24,7 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-# SECRET_KEY = '$u&nkowzre=c_0hy@(6n)0)5q#fm4z%in$f$mfzn@w_-c%at*d'
+SECRET_KEY = '$u&nkowzre=c_0hy@(6n)0)5q#fm4z%in$f$mfzn@w_-c%at*d'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -41,7 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'corsheaders',
+#    'corsheaders',
     'users'
 ]
 
@@ -53,7 +53,7 @@ MIDDLEWARE = [
 #    'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware'
+#    'corsheaders.middleware.CorsMiddleware'
 ]
 
 ROOT_URLCONF = 'westagram.urls'
@@ -120,27 +120,3 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-##CORS
-CORS_ORIGIN_ALLOW_ALL=True
-CORS_ALLOW_CREDENTIALS = True
-
-CORS_ALLOW_METHODS = (
-    'DELETE',
-    'GET',
-    'OPTIONS',
-    'PATCH',
-    'POST',
-    'PUT',
-)
-
-CORS_ALLOW_HEADERS = (
-    'accept',
-    'accept-encoding',
-    'authorization',
-    'content-type',
-    'dnt',
-    'origin',
-    'user-agent',
-    'x-csrftoken',
-    'x-requested-with',
-)
