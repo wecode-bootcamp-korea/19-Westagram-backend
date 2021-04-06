@@ -19,14 +19,14 @@ class SignUp(View):
                     bcrypt.gensalt()
                     )
 
-            if User.objects.filter(email=data['email']).exists():
-                return JsonResponse({'message':'DUPLICATE_EMAIL'}, status=400)
-
             if '@' not in data['email'] or '.' not in data['email']:
                 return JsonResponse({'message':'INVALID_EMAIL'}, status=400)
             
             if len(data['password']) < MINIMUM_PASSWORD_LENGTH:
                 return JsonResponse({'message':'INVALID_PASSWORD'}, status=400)
+
+            if User.objects.filter(email=data['email']).exists():
+                return JsonResponse({'message':'DUPLICATE_EMAIL'}, status=400)
 
             User.objects.create(
                     name     = data['name'],
