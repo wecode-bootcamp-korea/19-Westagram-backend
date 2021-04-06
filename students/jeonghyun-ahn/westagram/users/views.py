@@ -1,4 +1,4 @@
-import json, re
+import json, re, bcrypt
 from .models            import User
 from django.db.models   import aggregates
 from django.http        import JsonResponse
@@ -12,66 +12,69 @@ class UserView(View):
         nickname    = data['nickname']
         name        = data['name']
         phone       = data['phone']
-        pw_length   = 8
+        PW_LENGTH   = 8
         phone_check = re.compile('^[0-9]{3}[0-9]{3,4}[0-9]{4}')
         email_check = re.compile('^[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])*@[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])*.[a-zA-Z]{2,3}$')
 
 
         if len(login_id) <= 0 or len(login_pw) == 0 :
-            return JsonResponse({'message':'KEY_ERROR'}, status=400)
+            return JsonResponse({'message':'ID or PW KEY_ERROR'}, status=400)
 
-        if len(name) == 0 or len(nickname) == 0:
-            return JsonResponse({'message':'KEY_ERROR'}, status=400)
+        if len(name) <= 0 or len(nickname) <= 0:
+            return JsonResponse({'message':'NAME or NICKNAME KEY_ERROR'}, status=400)
 
         if not email_check.match(login_id):
-            return JsonResponse({'message':'Invaild ID_ERROR'}, status=400)
+            return JsonResponse({'message':'INVAILD ID_ERROR'}, status=400)
         
         if not phone_check.match(phone):
-            return JsonResponse({'message':'Invaild PHONE_ERROR'}, status=400)
+            return JsonResponse({'message':'INVAILD PHONE_ERROR'}, status=400)
            
-        if len(login_pw) < pw_length:
-            return JsonResponse({'message':'Invaild PW_ERROR'}, status=400)
+        if len(login_pw) < PW_LENGTH:
+            return JsonResponse({'message':'INVAILD PW_ERROR'}, status=400)
 
-        if User.objects.filter(nickname = nickname):
-            return JsonResponse({'message':'Nickname Duplicate_ERROR'}, status=400)
+        if User.objects.filter(nickname = nickname).exists():
+            return JsonResponse({'message':'NICKNAME DUPLICATE_ERROR'}, status=400)
         
-        if User.objects.filter(email = login_id):
-            return JsonResponse({'message':'ID Duplicate_ERROR'}, status=400)
+        if User.objects.filter(email = login_id).exists():
+            return JsonResponse({'message':'ID DUPLICATE_ERROR'}, status=400)
         
-        if User.objects.filter(phone = phone):
-            return JsonResponse({'message':'Phone Duplicate_ERROR'}, status=400)
+        if User.objects.filter(phone = phone).exists():
+            return JsonResponse({'message':'PHONE DUPLICATE_ERROR'}, status=400)
 
+        hash_password = bcrypt.hashpw(data['password'].encode('utf-8'),bcrypt.gensalt() )
         User.objects.create(
                     email    = data['email'],
-                    password = data['password'],
+                    password = hash_password.decode('utf-8') ,
                     nickname = data['nickname'],
                     name     = data['name'],
-                    phone    = data['phone'])
+                    phone    = data['phone'] )
+
         return JsonResponse({'message':'SUCCESS'}, status=200)
 
 
 class LoginView(View):
-    def post(self,request):
+    def post(self, request):
         data        = json.loads(request.body)
-        login_id    = data['id']
+        user_input  = data['id']
         login_pw    = data['password']
-        phone_check = re.compile('^[0-9]{3}[0-9]{3,4}[0-9]{4}')
-        email_check = re.compile('^[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])*@[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])*.[a-zA-Z]{2,3}$')
 
+        if user_input == '' or login_pw == '' :
+                return JsonResponse({'message':'KEY_ERROR'}, status= 400)
 
-        if login_id == "" or login_pw == "" :
-            return JsonResponse({'message':'KEY_ERROR'}, status = 400)
-
-        if phone_check.match(login_id):
-            if not User.objects.filter(phone=login_id) or not User.objects.filter(password=login_pw):
-                return JsonResponse({'message':'INVALID_USER'}, status = 401)
-
-        if email_check.match(login_id):
-            if not User.objects.filter(email=login_id) or not User.objects.filter(password=login_id):
-                return JsonResponse({'message':'INVALID_USER'}, status = 401)
+        elif User.objects.filter(email=user_input).exists():
+                login_id = User.objects.get(email=user_input)
         
-        if not email_check.match(login_id) and not phone_check.match(login_id):
-            if not User.objects.filter(nickname=login_id) or not User.objects.filter(password=login_pw):
-                return JsonResponse({'message':'INVALID_USER'}, status = 401)
+        elif User.objects.filter(phone=user_input).exists():
+                login_id = User.objects.get(phone=user_input)
+        
+        elif User.objects.filter(nickname=user_input).exists():
+                login_id = User.objects.get(nickname=user_input)
 
-        return JsonResponse({'message':'SUCCESS'}, status = 200)
+        else:
+                return JsonResponse({'message':'INVALID_ID'}, status = 404) 
+
+
+        if bcrypt.checkpw(login_pw.encode('utf-8'), login_id.password.encode('utf-8') ):
+                return JsonResponse({'message':'SUCCESS'}, status = 200)
+        
+        return JsonResponse({'message':'INVALID_PW'}, status = 401)
