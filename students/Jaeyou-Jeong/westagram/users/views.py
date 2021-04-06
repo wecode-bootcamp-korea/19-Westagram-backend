@@ -1,4 +1,5 @@
 import bcrypt
+import jwt
 import json
 
 from django.http import JsonResponse
@@ -6,6 +7,7 @@ from django.views import View
 
 from users.models import User
 from users.checks import email_validation
+from my_settings import SECRET_KEY
 
 class Signup(View):
     def post(self, request):
@@ -40,11 +42,11 @@ class Signin(View):
         try:
             if data['account']:
                 if User.objects.filter(email=data['account']).exists():
-                    Signin_User_Password = User.objects.get(email=data['account']).password
+                    Signin_User = User.objects.get(email=data['account'])
                 elif User.objects.filter(name=data['account']).exists():
-                    Signin_User_Password = User.objects.get(name=data['account']).password
+                    Signin_User = User.objects.get(name=data['account'])
                 elif User.objects.filter(phone_number=data['account']).exists():
-                    Signin_User_Password = User.objects.get(phone_number=data['account']).password
+                    Signin_User = User.objects.get(phone_number=data['account'])
                 else:
                     return JsonResponse({"message": "INVALID_USER"}, status=401)
             else:
@@ -53,8 +55,9 @@ class Signin(View):
             if not data['password']:
                 return JsonResponse({"message": "NO_VALUE_ERROR"}, status=400)
 
-            if bcrypt.checkpw(data['password'].encode('utf-8'), Signin_User_Password.encode('utf-8')):
-                return JsonResponse({"message": "SUCCESS"}, status=200)
+            if bcrypt.checkpw(data['password'].encode('utf-8'), Signin_User.password.encode('utf-8')):
+                Token = jwt.encode({'User_id': Signin_User.id}, SECRET_KEY, algorithm = 'HS256')
+                return JsonResponse({"message": "SUCCESS", "Token" : Token}, status=200)
             else:
                 return JsonResponse({"message": "INVALID_USER"}, status=401)
 
