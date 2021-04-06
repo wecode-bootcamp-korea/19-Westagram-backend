@@ -1,5 +1,6 @@
 import json
 import bcrypt
+import jwt
 
 from django.http  import JsonResponse
 from django.views import View
@@ -42,24 +43,24 @@ class SignUpView(View):
 
 class LogInView(View):
     def post(self,request):
-
+        data = json.loads(request.body)
         try:
-            data = json.loads(request.body)
 
-            if User.objects.filter(email=data['email']).exists() and \
+
+           if User.objects.filter(email=data['email']).exists() and \
                     User.objects.filter(password=data['password']).exists():
-                return JsonResponse({'message': 'LOG_IN_SUCCESS'}, status=201)
+                return JsonResponse({'message': 'LOGIN_SUCCESS'}, status=201)
 
-            if User.objects.filter(nickname=data['nickname']).exists() and \
-                    User.objects.filter(password=data['password']).exists():
-                return JsonResponse({'message': 'LOG_IN_SUCCESS'}, status=201)
+           if User.objects.filter(nickname=data['nickname']).exists() and \
+                   User.objects.filter(password=data['password']).exists():
+               return JsonResponse({'message': 'LOGIN_SUCCESS'}, status=201)
 
-            if User.objects.filter(phone_number=data['phone_number']).exists() and \
-                    User.objects.filter(password=data['password']).exists():
-                return JsonResponse({'message': 'LOG_IN_SUCCESS'}, status=201)
+           if User.objects.filter(phone_number=data['phone_number']).exists() and \
+                   User.objects.filter(password=data['password']).exists():
+               return JsonResponse({'message': 'LOGIN_SUCCESS'}, status=201)
 
-            else:
-                return JsonResponse({'message': 'ACCESS_DENIED'}, status=400)
+           else:
+               return JsonResponse({'message': 'ACCESS_DENIED'}, status=400)
 
         except KeyError:
-            return JsonResponse({'message': 'Key_Error!'}, status=400)
+            return JsonResponse({'message': 'Key_Error'}, status=400)
