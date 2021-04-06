@@ -11,15 +11,6 @@ class SignUpView(View):
     def post(self, request):
         data = json.loads(request.body)
         try:
-            if User.objects.filter(email=data['email']).exists():
-                return JsonResponse({'MESSAGE':'DUPLICATED_EMAIL'}, status=400)
-
-            if User.objects.filter(name=data['name']).exists():
-                return JsonResponse({'MESSAGE':'DUPLICATED_NAME'}, status=400)
-
-            if User.objects.filter(phone=data['phone']).exists():
-                return JsonResponse({'MESSAGE':'DUPLICATED_NUMBER'}, status=400)
-
             if not validator_email(data['email']):
                 return JsonResponse({'MESSAGE':'INVALIED_EMAIL'}, status=400)
 
@@ -28,6 +19,15 @@ class SignUpView(View):
 
             if not validator_phone(data['phone']):
                 return JsonResponse({'MESSAGE':'INVALIED_NUMBER'}, status=400)
+
+            if User.objects.filter(email=data['email']).exists():
+                return JsonResponse({'MESSAGE':'DUPLICATED_EMAIL'}, status=400)
+
+            if User.objects.filter(name=data['name']).exists():
+                return JsonResponse({'MESSAGE':'DUPLICATED_NAME'}, status=400)
+
+            if User.objects.filter(phone=data['phone']).exists():
+                return JsonResponse({'MESSAGE':'DUPLICATED_NUMBER'}, status=400)
 
             hashed_password = bcrypt.hashpw(data['password'].encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
