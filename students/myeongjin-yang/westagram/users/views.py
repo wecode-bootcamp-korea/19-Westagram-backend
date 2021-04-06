@@ -2,6 +2,7 @@ import json
 import re
 import bcrypt
 import jwt
+import my_settings
 
 from django.http  import JsonResponse
 from django.views import View 
@@ -91,10 +92,11 @@ class SignInView(View):
         
         else:
             if bcrypt.checkpw(password.encode('utf-8'), user.password.encode('utf-8')):
-                return JsonResponse({'message':"SUCCESS"}, status=200)
+                access_token = jwt.encode({'username':user.username}, my_settings.SECRET, algorithm='HS256')
+                return JsonResponse({'access_token':access_token}, status=200)
             
-            else:
-                return JsonResponse({'message':"INVALID_USER"}, status=401)
+            else:               
+                return JsonResponse({'message':"INVALID_USER",'access_token':access_token}, status=401)
         
 
 
