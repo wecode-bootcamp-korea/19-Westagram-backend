@@ -49,27 +49,27 @@ class LoginView(View):
             nickname = data.get('nickname')
             phone_number = data.get('phone_number')
 
+            x = User.objects.filter(nickname=data['nickname'])
+            print(x)
             if email:
-                if User.objects.filter(email=data['email']).exists():
-                    passwords = User.objects.get(email=data['email']).password
-                else:
-                    return JsonResponse({'MESSAGE': 'NO VALIED'}, status=401)
-            if nickname:
-                if User.objects.filter(nickname=data['nickname']).exists():
-                    passwords = User.objects.get(nickname=data['nickname']).password
-                else:
-                    return JsonResponse({'MESSAGE': 'NO VALIED'}, status=401)
-            if phone_number:
-                if User.objects.filter(phone_number=data['phone_number']).exists():
-                    passwords = User.objects.get(phone_number=data['phone_number']).password
-                else:
-                    return JsonResponse({'MESSAGE': 'NO VALIED'}, status=401)
+                if not User.objects.filter(email=data['email']).exists():
+                    return JsonResponse({'MESSAGE': 'NO VALIED'}, status=404)
+                passwords = User.objects.get(email=data['email']).password  # 비밀a번호를 변수에 저
 
-            bcrypt.checkpw(data['password'].encode('utf-8'),passwords.encode('utf-8'))
-            return JsonResponse({'MESSGAGE': 'SUCCESS'}, status=200)
+            if nickname:
+                if not User.objects.filter(nickname=data['nickname']).exists():
+                    return JsonResponse({'MESSAGE': 'NO VALIED'}, status=404)
+                passwords = User.objects.get(nickname=data['nickname']).password
+
+            elif phone_number:
+                if not User.objects.filter(phone_number=data['phone_number']).exists():
+                    return JsonResponse({'MESSAGE': 'NO VALIED'}, status=404)
+                passwords = User.objects.get(phone_number=data['phone_number']).password
+
+            if bcrypt.checkpw(data['password'].encode('utf-8'),passwords.encode('utf-8')) == True:
+                return JsonResponse({'MESSGAGE': 'SUCCESS'}, status=200)
+            else:
+                return JsonResponse({'MESSAGE': 'NO VALIED'}, status=404)
 
         except KeyError:
             return JsonResponse({'MESSAGE': 'KEY_ERROR'}, status=400)
-
-
-
