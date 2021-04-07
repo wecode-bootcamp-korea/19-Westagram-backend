@@ -7,6 +7,7 @@ from django.views import View
 
 from users.models import User
 from users.checks import email_validation
+
 from my_settings import SECRET_KEY
 
 class Signup(View):
@@ -42,11 +43,11 @@ class Signin(View):
         try:
             if data['account']:
                 if User.objects.filter(email=data['account']).exists():
-                    Signin_User = User.objects.get(email=data['account'])
+                    signin_user = User.objects.get(email=data['account'])
                 elif User.objects.filter(name=data['account']).exists():
-                    Signin_User = User.objects.get(name=data['account'])
+                    signin_user = User.objects.get(name=data['account'])
                 elif User.objects.filter(phone_number=data['account']).exists():
-                    Signin_User = User.objects.get(phone_number=data['account'])
+                    signin_user = User.objects.get(phone_number=data['account'])
                 else:
                     return JsonResponse({"message": "INVALID_USER"}, status=401)
             else:
@@ -55,11 +56,10 @@ class Signin(View):
             if not data['password']:
                 return JsonResponse({"message": "NO_VALUE_ERROR"}, status=400)
 
-            if bcrypt.checkpw(data['password'].encode('utf-8'), Signin_User.password.encode('utf-8')):
-                Token = jwt.encode({'User_id': Signin_User.id}, SECRET_KEY, algorithm = 'HS256')
+            if bcrypt.checkpw(data['password'].encode('utf-8'), signin_user.password.encode('utf-8')):
+                Token = jwt.encode({'User_id': signin_user.id}, SECRET_KEY, algorithm = 'HS256')
                 return JsonResponse({"message": "SUCCESS", "Token" : Token}, status=200)
-            else:
-                return JsonResponse({"message": "INVALID_USER"}, status=401)
+            return JsonResponse({"message": "INVALID_USER"}, status=401)
 
         except KeyError:
             return JsonResponse({"message": "KEY_ERROR"}, status=400)
