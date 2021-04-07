@@ -40,8 +40,10 @@ class SignInView(View):
         data = json.loads(request.body)
         
         try:
-            email     = data['email']
-            password  = data['password']
+            email       = data['email']
+            password    = data['password']
+            name        = data.get('name', None)
+            phon_number = data.get('phon_number', None)
 
             if not User.objects.filter(email=email).exists():
                 return JsonResponse({'MESSAGE':'NOT_FOUND'}, status=404)
