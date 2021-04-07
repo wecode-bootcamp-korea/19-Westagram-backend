@@ -5,6 +5,7 @@ import jwt
 
 from django.views       import View
 from django.http        import JsonResponse
+from django.db.models   import Q
 
 from user.models        import User
 from westagram.settings import SECRET_KEY
@@ -58,52 +59,70 @@ class SignUpView(View):
         except KeyError:
             return JsonResponse({'MESSAGE':'KEY_ERROR'}, status=400)
 
-
-
 class LogInView(View):
     def post(self, request):
         data = json.loads(request.body)
 
-        password = data['password']
-
         try:
-            if 'email' not in data and 'nickname' not in data and 'phone_number' not in data:
-                raise KeyError
+            password = data['password']
+            id       = data['id']
+            user = ''
 
-            if 'email' in data:
-                email = data['email']
-                if User.objects.filter(email=email).exists():
-                    user = User.objects.get(email=email)
-                else:
-                    return JsonResponse({'MESSAGE':'INVALID_USER'}, status=401)
+            if User.objects.filter(Q(email=id)|Q(phone_number=id)|Q(nickname=id)).exists():
+                user = User.objects.get(Q(email=id)|Q(phone_number=id)|Q(nickname=id))
+            if not user:
+                return JsonResponse({'MESSAGE':'INVALID_USER'}, status=404)
 
-            if 'nickname' in data:
-                nickname=data['nickname']
-                if User.objects.filter(nickname=nickname).exists():
-                    user = User.objects.get(nickname=nickname)
-                else:
-                    return JsonResponse({'MESSAGE':'INVALID_USER'}, status=401)
 
-            if 'phone_number' in data:
-                phone_number=data['phone_number']
-                if User.objects.filter(phone_number=phone_number).exists():
-                    user = User.objects.get(phone_number=phone_number)
-                else:
-                    return JsonResponse({'MESSAGE':'INVALID_USER'}, status=401)
+
+     #두번째 구현 방식
+
+
+        #     password = data['password']
+        #     id = data['id']
+        #     user = ''
+        #
+        #     if User.objects.filter(email=id).exists():
+        #         user = User.objects.get(email=id)
+        #     if User.objects.filter(nickname=id).exists():
+        #         user = User.objects.get(nickname=id)
+        #     if User.objects.filter(phone_number=id).exists():
+        #         user = User.objects.get(phone_number=id)
+        #     if not user:
+        #         return JsonResponse({'MESSAGE':'INVALID_USER'}, status=404)
+
+      # 첫번째 구현 방식
+
+
+            # if 'email' in data:
+            #     email = data['email']
+            #     if User.objects.filter(email=email).exists():
+            #         user = User.objects.get(email=email)
+            #     else:
+            #         return JsonResponse({'MESSAGE':'INVALID_USER'}, status=401)
+            #
+            # if 'nickname' in data:
+            #     nickname=data['nickname']
+            #     if User.objects.filter(nickname=nickname).exists():
+            #         user = User.objects.get(nickname=nickname)
+            #     else:
+            #         return JsonResponse({'MESSAGE':'INVALID_USER'}, status=401)
+            #
+            # if 'phone_number' in data:
+            #     phone_number=data['phone_number']
+            #     if User.objects.filter(phone_number=phone_number).exists():
+            #         user = User.objects.get(phone_number=phone_number)
+            #     else:
+            #         return JsonResponse({'MESSAGE':'INVALID_USER'}, status=401)
 
             encode_password = user.password.encode('utf-8')
             checked_password = bcrypt.checkpw(password.encode('utf-8'), encode_password)
-            if checked_password:
-                access_token = jwt.encode({'id': user.id}, SECRET_KEY, algorithm='HS256')
-                return JsonResponse({'TOKEN':access_token}, status=200)
-            else:
+
+            if not checked_password:
                 return JsonResponse({'MESSAGE':'INVALID_PASSWORD'}, status=401)
 
+            access_token = jwt.encode({'id': user.id}, SECRET_KEY, algorithm='HS256')
+            return JsonResponse({'TOKEN':access_token}, status=200)
+
         except KeyError:
-            return JsonResponse({'MESSAGE': 'KEY_ERROR'}, status=400)
-
-
-
-
-
-
+            return JsonResponse({'MESSAGE':'KEY_ERROR'}, status=400)
