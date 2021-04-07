@@ -19,7 +19,7 @@ class SignUp(View):
             email_check = re.compile('^[a-zA-Z0-9+-_.]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$')
             email_check = email_check.match(data['email'])
 
-            if email_check == None:
+            if email_check is None:
                 return JsonResponse({'message':'INVALID_EMAIL'}, status=400)
 
             if len(data['password']) < MINIMUM_PASSWORD_LENGTH:
@@ -45,25 +45,17 @@ class LogIn(View):
         data = json.loads(request.body)
 
         try:
-            if User.objects.filter(email=data['email']).exists():
-
-                user           = User.objects.get(email=data['email'])
-                input_password = data['password'].encode('utf-8')
-
-                if bcrypt.checkpw(input_password, user.password.encode('utf-8')):
-                    token = jwt.encode({'user_id':user.id}, my_settings.JWT_SECRET, algorithm=my_settings.JWT_ALGORITHM)
-                    return JsonResponse(
-                            {
-                                'message':'SUCCESS',
-                                'token':token
-                                },
-                            status=200)
-                
-                else:
-                    return JsonResponse({'message':'INCORRECT_PASSWORD'}, status=401)
-
-            else:
+            if not User.objects.filter(email=data['email']).exists():
                 return JsonResponse({'message':'NOT_FOUND'}, status=404)
+
+            user           = User.objects.get(email=data['email'])
+            input_password = data['password'].encode('utf-8')
+
+            if not bcrypt.checkpw(input_password, user.password.encode('utf-8')):
+                return JsonResponse({'message':'INCORRECT_PASSWORD'}, status=401)
+
+            token = jwt.encode({'user_id':user.id}, my_settings.JWT_SECRET, algorithm=my_settings.JWT_ALGORITHM)
+            return JsonResponse({'message':'SUCCESS', 'token':token}, status=200)
 
         except KeyError:
             return JsonResponse({'message':'KEY_ERROR'}, status=400)
