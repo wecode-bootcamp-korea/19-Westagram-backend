@@ -7,7 +7,8 @@ from django.http      import JsonResponse
 from django.views     import View
 from django.db.models import Q
 
-from .models import Accounts
+from mysetting import ALGORITHM, secret
+from .models   import Accounts
 
 # 회원가입 뷰
 class SignupView(View):
@@ -33,16 +34,16 @@ class SignupView(View):
                 return JsonResponse({'message': 'Password too short!'}, status = 400)
             
             if not re.search('[a-zA-Z]+', data['password']) or not re.search('[0-9]+', data['password']):
-                return JsonResponse({'message': 'Invalid User'}, status = 400)
+                return JsonResponse({'message': 'Password Invalid User'}, status = 400)
             
             if not password_validation.search(data['password']):
-                return JsonResponse({'message': 'Invalid User'}, status = 400)
+                return JsonResponse({'message': 'Pnvalid User'}, status = 400)
             
             if name_validation.search(data['name']):
-                return JsonResponse({'message': "Invalid User"}, status = 400)
+                return JsonResponse({'message': "Invalid User name"}, status = 400)
             
             if len(data['phone']) > MAX_PHONE or len(data['phone']) < MIN_PHONE or not phone_validation.match(data['phone']):
-                return JsonResponse({'message': "Invalid User"}, status = 400)
+                return JsonResponse({'message': "Invalid User phone"}, status = 400)
             
             if Accounts.objects.filter(email = data['email']).exists():
                 return JsonResponse({'message': "Already exist email"}, status = 400)
@@ -63,7 +64,7 @@ class SignupView(View):
             
             return JsonResponse({"message": "Sign up complete!"}, status = 201)
         
-        except KeyError as error_source:
+        except KeyError:
             return JsonResponse({'message': "KEY ERROR!"}, status = 400)
         
 # 로그인 뷰
@@ -72,6 +73,19 @@ class LoginView(View):
     def post(self, request):
         data = json.loads(request.body)
 
-        Accounts.objects.filter(Q(email = data.get('account'))|
-                                # Q(nickname = data.get('account'))|
-                                Q(phone =  data.get('account')))
+        try:
+            request_id = Accounts.objects.filter(Q(email = data['email'])|
+                                            # Q(nickname = data.get('account'))|
+                                                 Q(phone = data['email']))
+            
+            if bcrypt.checkpw(data.get('password').encode('utf-8'), request_id.get().password.encode('utf-8')):
+                token = jwt.encode({"user_id": request_id.first().id}, secret['secret'], ALGORITHM)
+                return JsonResponse({'token': token}, status = 200)
+            
+            return JsonResponse({'message': 'Invalid User'}, status = 400)
+            
+        except KeyError:
+            return JsonResponse({'message': 'Key Error'}, status = 400)
+        
+        except Accounts.DoesNotExist:
+            return JsonResponse({'message': 'User Not Found'}, status = 404)
