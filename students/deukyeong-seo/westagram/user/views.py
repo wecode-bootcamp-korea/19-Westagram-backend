@@ -1,4 +1,4 @@
-import json, bcrypt, jwt
+import json, bcrypt, jwt, re
 
 from django.views import View
 from django.http  import JsonResponse
@@ -16,14 +16,13 @@ class SignUp(View):
         
         try:
 
-            hashed_password = bcrypt.hashpw(
-                    data['password'].encode('utf-8'), 
-                    bcrypt.gensalt()
-                    )
+            email_check     = re.compile('^[a-zA-Z0-9+-_.]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$')
+            email_check     = email_check.match(data['email'])
+            hashed_password = bcrypt.hashpw(data['password'].encode('utf-8'), bcrypt.gensalt())
 
-            if '@' not in data['email'] or '.' not in data['email']:
+            if email_check == None:
                 return JsonResponse({'message':'INVALID_EMAIL'}, status=400)
-            
+
             if len(data['password']) < MINIMUM_PASSWORD_LENGTH:
                 return JsonResponse({'message':'INVALID_PASSWORD'}, status=400)
 
