@@ -46,24 +46,18 @@ class LoginView(View):
     def post(self, request):
         data = json.loads(request.body)
         try:
-            if data['account']:
-                if User.objects.filter(email=data['account']).exists():
-                    valid_password = User.objects.get(email=data['account']).password.encode('utf-8')
+            if User.objects.filter(email=data['account']).exists():
+                valid_password = User.objects.get(email=data['account']).password.encode('utf-8')
 
-                elif User.objects.filter(phone=data['account']).exists():
-                    valid_password = User.objects.get(phone=data['account']).password.encode('utf-8')
-
-                else:
-                    return JsonResponse({'MESSAGE':'INVALIED_USER'}, status=400)
+            elif User.objects.filter(phone=data['account']).exists():
+                valid_password = User.objects.get(phone=data['account']).password.encode('utf-8')
 
             else:
-                return JsonResponse({'MESSAGE':'VALUE_EMPTY'}, status=400)
+                return JsonResponse({'MESSAGE':'INVALIED_USER'}, status=400)
 
             if bcrypt.checkpw(data['password'].encode('utf-8'), valid_password):
                 return JsonResponse({'MESSAGE':'SUCCESS'}, status=200)
-
-            else:
-                return JsonResponse({'MESSAGE':'INVALIED_PASSWORD'}, status=400)
+            return JsonResponse({'MESSAGE':'INVALIED_PASSWORD'}, status=401)
 
         except KeyError:
             return JsonResponse( {'MESSAGE': "KEY_ERROR"}, status=400)
