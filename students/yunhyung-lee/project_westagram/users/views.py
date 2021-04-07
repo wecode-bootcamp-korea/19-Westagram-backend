@@ -1,10 +1,12 @@
 import json
 import bcrypt
+import jwt
 
-from django.http    import JsonResponse
-from django.views   import View
-from .models        import User
+from django.http  import JsonResponse
+from django.views import View
 
+from .models      import User
+from project_westagram.settings  import SECRET_KEY
 
 class SignUpView(View):
     def post(self, request):
@@ -25,7 +27,7 @@ class SignUpView(View):
             if User.objects.filter(phone_num=data['phone_num']).exists():
                 return JsonResponse({'MESSAGE' : 'DUPLICATED PHONE_NUM'}, status=400)
             
-            if User.objects.filter(user_name=data['name']).exists():
+            if User.objects.filter(name=data['name']).exists():
                 return JsonResponse({'MESSAGE' : 'DUPLICATED NAME'}, status=400)
 
             User.objects.create(
@@ -49,15 +51,15 @@ class SignInView(View):
             password = data['password']
 
             if not User.objects.filter(email=email).exists():
-                return JsonResponse({'MESSAGE': 'INVALID USER'}, status=401)
+                return JsonResponse({'MESSAGE': 'NOT FOUND'}, status=404)
+           
             user = User.objects.get(email=email)
-            
-            if user.password == password:
-                return JsonResponse({'MESSAGE': 'SUCCESS'}, status=200)
-            return JsonResponse({'MESSAGE': 'INVALID USER'}, status=401)
-            
-            if bcrypt.checkpw(password.encode('utf-8'), signin_user.password.encode('utf-8')):
-                return JsonResponse({'MESSAGE' : 'SUCCESS'}, status=200)
+             
+            if bcrypt.checkpw(password.encode('utf-8'), user.password.encode('utf-8')):
+                Token = jwt.encode({'User_id' : user.id}, SECRET_KEY, algorithm = 'HS256')
+                return JsonResponse({'MESSAGE' : 'SUCCESS', 'Token':Token}, status=200)
         
+            return JsonResponse({'MESSAGE': 'INVALID USER'}, status=401)
+
         except KeyError:
             return JsonResponse({'MESSAGE': 'KEY ERROR'}, status=400)
