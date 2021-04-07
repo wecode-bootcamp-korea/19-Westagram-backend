@@ -31,9 +31,9 @@ class SignUpView(View):
                 return JsonResponse({'message': 'VALID_PASSWORD'}, status=400)
             
             if User.objects.filter(
-                Q(email=email)|
-                Q(name=data['name'])|
-                Q(phone_number=data['phone_number'])).exists():
+                Q(email        = email)|
+                Q(name         = data['name'])|
+                Q(phone_number = data['phone_number'])).exists():
                 return JsonResponse({'message': 'DUPLICATE_ACCOUNT'}, status=400)
             
             if not data['phone_number'].isdigit():
@@ -59,12 +59,13 @@ class LoginView(View):
 
         try:
             data = json.loads(request.body)
-            password=data['password']
+            
+            password = data['password']
 
             if user := User.objects.filter(
-                Q(name=data['account'])|
-                Q(email=data['account'])|
-                Q(phone_number=data['account'])):
+                Q(name         = data['account'])|
+                Q(email        = data['account'])|
+                Q(phone_number = data['account'])):
                 
                 if bcrypt.checkpw(password.encode('utf-8'),user.get().password.encode('utf-8')):
                     return JsonResponse({'message': 'SUCCESS'}, status=200)
