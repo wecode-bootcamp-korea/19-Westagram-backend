@@ -20,9 +20,6 @@ class SignUpView(View):
             nickname = data['nickname']
             phone    = data['phone']
 
-            if User.objects.filter(email=email).exists():
-                return JsonResponse({'MESSAGE' : 'EMAIL ALREADY EXISTS'}, status=400)
-
             if not email_validator(email):
                 return JsonResponse({'MESSAGE' : 'INVALID EMAIL'}, status=400) 
 
@@ -31,6 +28,9 @@ class SignUpView(View):
 
             if not phone_validator(phone):
                 return JsonResponse({'MESSAGE' : 'INVALID PHONE NUMBER'}, status=400)
+
+            if User.objects.filter(email=email).exists():
+                return JsonResponse({'MESSAGE' : 'EMAIL ALREADY EXISTS'}, status=400)
 
             hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode()
 
@@ -54,19 +54,20 @@ class SignInView(View):
             account  = data['account']
             password = data['password']
             
-            user = User.objects.filter(Q(email=account) | Q(phone=account) | Q(nickname=account))
+            user = User.objects.filter(Q(email    = account) | 
+                                       Q(phone    = account) | 
+                                       Q(nickname = account)).first()
 
             if not user:
-                return JsonResponse({'MESSAGE' : 'INVALID USER'}, status=401)
-            user = user[0]
+                return JsonResponse({'MESSAGE' : 'INVALID USER'}, status=404)
             
             input_password = password.encode('utf-8')
-            db_password = user.password.encode('utf-8')
+            db_password    = user.password.encode('utf-8')
 
             if bcrypt.checkpw(input_password, db_password):
-                token = jwt.encode({'user_id' : user.id}, SECRET_KEY, algorithm=ALGORITHM)
+                token = jwt.encode({'user_id' : user.id}, SECRET_KEY, ALGORITHM)
                 return JsonResponse({'MESSAGE' : 'SUCCESS', 'token' : token}, status=200)
-            
+
             return JsonResponse({'MESSAGE' : 'WRONG PASSWORD'}, status=401)
 
         except KeyError:
