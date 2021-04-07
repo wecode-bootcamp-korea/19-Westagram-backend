@@ -52,15 +52,14 @@ class SingIn(View):
             password  = data['password']
 
             if not User.objects.filter(email=email).exists():
-                return JsonResponse({'MESSAGE':'INVALID_USER'}, status=401)
+                return JsonResponse({'MESSAGE':'INVALID_USER'}, status=404)
             
             valid_password = User.objects.get(email=email).password.encode('utf-8')         
 
             if not bcrypt.checkpw(password.encode('utf-8'), valid_password):
                 return JsonResponse({'MESSAGE':'INVALID_USER'}, status=401)
 
-            SECRET_KEY   = SECRET['secret']
-            access_token = jwt.encode({'email':email}, SECRET_KEY, algorithm = 'HS256')
+            access_token = jwt.encode({'email':email}, SECRET['secret'], algorithm = 'HS256')
 
             return JsonResponse({'MESSAGE':'SUCCESS', 'ACCESS_TOKEN':access_token}, status=200)
 
