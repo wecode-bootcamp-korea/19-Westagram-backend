@@ -16,9 +16,8 @@ class SignUp(View):
         
         try:
 
-            email_check     = re.compile('^[a-zA-Z0-9+-_.]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$')
-            email_check     = email_check.match(data['email'])
-            hashed_password = bcrypt.hashpw(data['password'].encode('utf-8'), bcrypt.gensalt())
+            email_check = re.compile('^[a-zA-Z0-9+-_.]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$')
+            email_check = email_check.match(data['email'])
 
             if email_check == None:
                 return JsonResponse({'message':'INVALID_EMAIL'}, status=400)
@@ -28,6 +27,8 @@ class SignUp(View):
 
             if User.objects.filter(email=data['email']).exists():
                 return JsonResponse({'message':'DUPLICATE_EMAIL'}, status=400)
+
+            hashed_password = bcrypt.hashpw(data['password'].encode('utf-8'), bcrypt.gensalt())
 
             User.objects.create(
                     name     = data['name'],
