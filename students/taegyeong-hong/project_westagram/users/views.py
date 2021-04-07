@@ -38,7 +38,8 @@ class SigninView(View):
             pasword = data[password]
             user    = User.objects.get(email = data['email'])
 
-            if wjddlnot in data[email] and 
+            if  User.objects.filter(email=data['email']).exists() :
+                    user = Account.objects.get(email=data['email'])  
 
         except KeyError:
             return JsonResponse({'message':'KEY_ERROR'},status=400)
