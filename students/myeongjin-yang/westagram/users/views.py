@@ -25,6 +25,9 @@ class SignUpView(View):
 
             if not email_check.match(email) or not phonenumber_check.match(phonenumber):
                 return JsonResponse({'message':"Invalid ID"}, status=400)
+
+            if len(password) < PASSWORD_CHECK:
+                return JsonResponse({'message':"Invalid PW"}, status=400)
             
             if User.objects.filter(email=email).exists():
                 return JsonResponse({'message':"existing ID"}, status=400)
@@ -35,8 +38,6 @@ class SignUpView(View):
             if User.objects.filter(username = username):
                 return JsonResponse({'message':"existing username"}, status=400)
 
-            if len(password) < PASSWORD_CHECK:
-                return JsonResponse({'message':"Invalid PW"}, status=400)
 
             hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())       
             
@@ -83,14 +84,14 @@ class SignInView(View):
                     user = User.objects.get(phonenumber=phonenumber)
                 else:                   
                     return JsonResponse({'message':"INVALID_USER"}, status=401)
-           
-        except KeyError:
-            return JsonResponse({'message':"KEY_ERROR"}, status=400)
-        
-        else:
+                   
+
             if bcrypt.checkpw(password.encode('utf-8'), user.password.encode('utf-8')):
                 access_token = jwt.encode({'username':user.username}, my_settings.SECRET, algorithm='HS256')
                 return JsonResponse({'access_token':access_token}, status=200)
             
             else:               
-                return JsonResponse({'message':"INVALID_USER",'access_token':access_token}, status=401)
+                return JsonResponse({'message':"WRONG_PASSWORD"}, status=401)
+
+        except KeyError:
+            return JsonResponse({'message':"KEY_ERROR"}, status=400)
