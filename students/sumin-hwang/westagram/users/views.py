@@ -7,6 +7,7 @@ from django.http      import JsonResponse
 from django.views     import View
 from django.db.models import Q
 
+from my_settings  import ALGORITHM, SECRET_KEY
 from users.models import User
 
 PASSWORD_MINIMUM_LENGTH = 8
@@ -69,35 +70,29 @@ class SignUpView(View):
 
 class SignInView(View):
     def post(self, request):
-        try:
-            data          = json.loads(request.body)
-            password      = data.get('password', None)
-            mobile_number = data.get('mobile_number', None)
-            email         = data.get('email', None)
-            nickname      = data.get('nickname', None)
+        data          = json.loads(request.body)
+        password      = data['password']
+        mobile_number = data.get('mobile_number', None)
+        email         = data.get('email', None)
+        nickname      = data.get('nickname', None)
 
-            if not ((mobile_number or email or nickname) and password):
-                return JsonResponse({'MESSAGE':'KEY_ERROR'}, status=400) 
+        if not ((mobile_number or email or nickname) and password):
+            return JsonResponse({'MESSAGE':'KEY_ERROR'}, status=400) 
 
-            if not User.objects.filter(
-                    Q(mobile_number = mobile_number) |
-                    Q(email         = email) |
-                    Q(nickname      = nickname)
-                    ).exists():
-                return JsonResponse({'MESSAGE':'INVALID_USER'}, status=401)
+        if user := User.objects.filter(
+                Q(mobile_number = mobile_number) |
+                Q(email         = email) |
+                Q(nickname      = nickname)
+                ).exists() == False:
+            return JsonResponse({'MESSAGE':'INVALID_USER'}, status=404)
                 
-            user = User.objects.get(
-                    Q(mobile_number = mobile_number) |
-                    Q(email         = email) |
-                    Q(nickname      = nickname)
-                    )
+        user = User.objects.get(
+                Q(mobile_number = mobile_number) |
+                Q(email         = email) |
+                Q(nickname      = nickname)
+                )
 
-            if bcrypt.checkpw(data['password'].encode('utf-8'), user.password.encode('utf-8')):
-                SECRET = 'secret'
-                token = jwt.encode({'id' : user.id},SECRET, algorithm='HS256')
-                return JsonResponse({'MESSAGE':'SUCCESS'}, status=200)
-            else:
-                return JsonResponse({'MESSAGE':'PASSWORD_ERROR'}, status=401)
-
-        except KeyError:
-            return JsonResponse({'MESSAGE':'KEY_ERROR'}, status=400)
+        if bcrypt.checkpw(data['password'].encode('utf-8'), user.password.encode('utf-8')):
+            token = jwt.encode({'id' : user.id}, SECRET_KEY, ALGORITHM)
+            return JsonResponse({'TOKEN': token}, status=200)
+        return JsonResponse({'MESSAGE':'PASSWORD_ERROR'}, status=401)
