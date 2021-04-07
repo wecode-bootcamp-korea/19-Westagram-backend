@@ -44,21 +44,22 @@ class Signin(View):
             if data['account']:
                 if User.objects.filter(email=data['account']).exists():
                     signin_user = User.objects.get(email=data['account'])
-                elif User.objects.filter(name=data['account']).exists():
+                if User.objects.filter(name=data['account']).exists():
                     signin_user = User.objects.get(name=data['account'])
-                elif User.objects.filter(phone_number=data['account']).exists():
+                if User.objects.filter(phone_number=data['account']).exists():
                     signin_user = User.objects.get(phone_number=data['account'])
                 else:
-                    return JsonResponse({"message": "INVALID_USER"}, status=401)
+                    return JsonResponse({"message": "NOT_FOUND"}, status=404)
             else:
                 return JsonResponse({"message": "NO_VALUE_ERROR"}, status=400)
             
             if not data['password']:
-                return JsonResponse({"message": "NO_VALUE_ERROR"}, status=400)
+                return JsonResponse({"message": "NO_VALUE_ERROR"}, status=401)
 
             if bcrypt.checkpw(data['password'].encode('utf-8'), signin_user.password.encode('utf-8')):
                 Token = jwt.encode({'User_id': signin_user.id}, SECRET_KEY, algorithm = 'HS256')
                 return JsonResponse({"message": "SUCCESS", "Token" : Token}, status=200)
+
             return JsonResponse({"message": "INVALID_USER"}, status=401)
 
         except KeyError:
