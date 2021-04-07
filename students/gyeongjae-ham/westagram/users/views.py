@@ -7,7 +7,7 @@ from django.views    import View
 
 from .models            import User
 from .validation        import validator_email, validator_phone, validator_password
-from westagram.settings import SECRET_KEY, HS 
+from westagram.settings import SECRET_KEY, ALGORITHM 
 
 class SignUpView(View):
     def post(self, request):
@@ -58,7 +58,7 @@ class LoginView(View):
                 return JsonResponse({'MESSAGE':'INVALIED_USER'}, status=400)
 
             if bcrypt.checkpw(data['password'].encode('utf-8'), user.password.encode('utf-8')):
-                token = jwt.encode({'user_id':user.id}, SECRET_KEY, algorithm=HS)
+                token = jwt.encode({'user_id':user.id}, SECRET_KEY, algorithm=ALGORITHM)
                 return JsonResponse({'MESSAGE':'SUCCESS', 'Token':token}, status=200)
             return JsonResponse({'MESSAGE':'INVALIED_PASSWORD'}, status=401)
 
