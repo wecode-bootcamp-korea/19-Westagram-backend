@@ -3,10 +3,11 @@ import bcrypt
 import jwt
 import re
 
-from django.http    import JsonResponse
-from django.views   import View
+from django.http      import JsonResponse
+from django.views     import View
+from django.db.models import Q
 
-from .models        import Accounts
+from .models import Accounts
 
 # 회원가입 뷰
 class SignupView(View):
@@ -46,8 +47,8 @@ class SignupView(View):
             if Accounts.objects.filter(email = data['email']).exists():
                 return JsonResponse({'message': "Already exist email"}, status = 400)
             
-            if Accounts.objects.filter(nickname = data['nickname']).exists():
-                return JsonResponse({'message': 'Already exist nickname'}, status = 400)
+            # if Accounts.objects.filter(nickname = data['nickname']).exists():
+            #     return JsonResponse({'message': 'Already exist nickname'}, status = 400)
             
             if Accounts.objects.filter(phone = data['phone']).exists():
                 return JsonResponse({'message': "Already exist phone"}, status = 400)
@@ -57,7 +58,7 @@ class SignupView(View):
             Accounts.objects.create(email    = data['email'],
                                     password = encrypted_password,
                                     name     = data['name'],
-                                    nickname = data['nickname'],
+                                    # nickname = data['nickname'],
                                     phone    = data['phone'],)
             
             return JsonResponse({"message": "Sign up complete!"}, status = 201)
@@ -70,43 +71,7 @@ class LoginView(View):
     
     def post(self, request):
         data = json.loads(request.body)
-        pass
-        # try:
-            
-            # if request_id := data.get('email'):
-            #     if bcrypt.checkpw(data['password'].encode("utf-8"), Accounts.objects.get(email = request_id).password.encode('utf-8')):
-            #         return JsonResponse({'message': 'Log in SUCCESS'}, status = 200)
-            #     else:
-            #         return JsonResponse({'message': 'Invalid user'}, status = 401)
-                
-            # if request_id := data.get('nickname'):
-            #     if bcrypt.checkpw(data['password'].encode("utf-8"), Accounts.objects.get(nickname = request_id).password.encode('utf-8')):
-            #         return JsonResponse({'message': 'Log in SUCCESS'}, status = 200)
-            #     else:
-            #         return JsonResponse({'message': 'Invalid user'}, status = 401)
-                
-            # if request_id := data.get('phone'):
-            #     if bcrypt.checkpw(data['password'].encode("utf-8"), Accounts.objects.get(phone = request_id).password.encode('utf-8')):
-            #         return JsonResponse({'message': 'Log in SUCCESS'}, status = 200)
-            #     else:
-            #         return JsonResponse({'message': 'Invalid user'}, status = 401)
-            
-            # if accounts.filter(email = data["account"]).exists():
-            #     request_id = accounts.get(email = data.get('account'))
-            
-            # if accounts.filter(nickname = data['account']).exists():
-            #     request_id = accounts.get(nickname = data.get('account'))
-            
-            # if accounts.filter(phone = data['account']).exists():
-            #     request_id = accounts.get(phone = data.get('account'))
-                
-            # if bcrypt.checkpw(data['password'].encode("utf-8"), request_id.password.encode('utf-8')):
-            #     return JsonResponse({'message': 'Log in SUCCESS'}, status = 200)
-            # else:
-            #     return JsonResponse({'message': 'Invalid user'}, status = 401)
-            
-        # except KeyError as error_source:
-        #     return JsonResponse({'message': f"KEY ERROR, {error_source} is WRONG"}, status = 400)
-        
-        # except Accounts.DoesNotExist as error_source:
-        #     return JsonResponse({'message': f"{error_source} is Invalid ID"}, status = 400)
+
+        Accounts.objects.filter(Q(email = data.get('account'))|
+                                # Q(nickname = data.get('account'))|
+                                Q(phone =  data.get('account')))
