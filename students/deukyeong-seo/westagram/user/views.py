@@ -63,7 +63,7 @@ class LogIn(View):
                     return JsonResponse({'message':'INCORRECT_PASSWORD'}, status=401)
 
             else:
-                return JsonResponse({'message':'INCORRECT_EMAIL'}, status=401)
+                return JsonResponse({'message':'NOT_FOUND'}, status=404)
 
         except KeyError:
             return JsonResponse({'message':'KEY_ERROR'}, status=400)
