@@ -14,27 +14,17 @@ PASSWORD_MINIMUM_LENGTH = 8
 
 class SignUpView(View):
     def post(self, request):
-        
         try:
             data          = json.loads(request.body)
             mobile_number = data.get('mobile_number', None)
             email         = data.get('email', None)
             name          = data.get('name', None)
             nickname      = data.get('nickname', None)
-            password      = data.get('password', None)
-        
+            password      = data['password']
+            
             mobile_number_form = re.compile('[0-9]{3}-[0-9]{3,4}-[0-9]{4}')
             email_form         = re.compile('^[a-zA-Z0-9+-_.]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$')
-
-            if not (
-                    mobile_number
-                    and email
-                    and name
-                    and nickname
-                    and password
-                    ):
-                return JsonResponse({'MESSAGE':'INVALID_KEY'}, status=400)
-        
+            
             if not mobile_number_form.match(str(mobile_number)):
                 return JsonResponse({'MESSAGE':'INVALID_MOBILE_NUMBER'}, status=400)
 
@@ -64,29 +54,26 @@ class SignUpView(View):
                     )
 
             return JsonResponse({'MESSAGE':'SUCCESS'}, status=201)
-        
         except KeyError:
-            return JsonResponse({'MESSAGE':'KEY_ERROR'}, status=400)
+            return JsonResponse({'MESSAGE':'KEYERROR'}, status=401)
 
 class SignInView(View):
     def post(self, request):
-        data          = json.loads(request.body)
-        password      = data['password']
-        mobile_number = data.get('mobile_number', None)
-        email         = data.get('email', None)
-        nickname      = data.get('nickname', None)
+        try:
+            data          = json.loads(request.body)
+            password      = data['password']
+            login_id      = data['login_id']
 
-        if not ((mobile_number or email or nickname) and password):
-            return JsonResponse({'MESSAGE':'KEY_ERROR'}, status=400) 
+            if user := User.objects.filter(
+                    Q(mobile_number = login_id) |
+                    Q(email         = login_id) |
+                    Q(nickname      = login_id)
+                    ):
 
-        if user := User.objects.filter(
-                Q(mobile_number = mobile_number) |
-                Q(email         = email) |
-                Q(nickname      = nickname)
-                ):
-
-            if bcrypt.checkpw(data['password'].encode('utf-8'), user.get().password.encode('utf-8')):
-                token = jwt.encode({'id' : user.get().id}, SECRET_KEY, ALGORITHM)
-                return JsonResponse({'TOKEN': token}, status=200)
-            return JsonResponse({'MESSAGE':'PASSWORD_ERROR'}, status=401)
-        return JsonResponse({'MESSAGE':'INVALID_USER'}, status=404)
+                if bcrypt.checkpw(data['password'].encode('utf-8'), user.get().password.encode('utf-8')):
+                    token = jwt.encode({'id' : user.get().id}, SECRET_KEY, ALGORITHM)
+                    return JsonResponse({'MESSAGE':'SUCCESS', 'TOKEN': token}, status=200)
+                return JsonResponse({'MESSAGE':'PASSWORD_ERROR'}, status=401)
+            return JsonResponse({'MESSAGE':'INVALID_USER'}, status=404)
+        except KeyError:
+            return JsonResponse({'MESSAGE':'KEY_ERROR'})
