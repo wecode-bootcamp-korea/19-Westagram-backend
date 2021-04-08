@@ -1,22 +1,23 @@
-import json
-import jwt
+# import json
+# import jwt
 
-from mysetting       import secret, ALGORITHM
-from accounts.models import Accounts
+# from mysetting       import secret, ALGORITHM
+# from accounts.models import Accounts
 
-def loginauth(func):
-    def wrapper(self, func, request):
+# def loginauth(func):
+#     def wrapper(self, func, request):
         
-        request_token = request.headers.get("token", None)
-        print(request_token)
+#         data = json.loads(request.body)
+#         print(data)
         
-        request_id    = jwt.decode(request_token, secret['secret'], ALGORITHM).get('user_id')
-        print(request_id)
+#         request_token = data.get("token", None)
+#         request_id    = jwt.decode(request_token, secret['secret'], ALGORITHM).get('user_id')
+#         print(request_token, request_id)
         
-        if Accounts.objects.filter(id = request_id).exist():
+#         if Accounts.objects.filter(id = request_id).exist():
         
-            request.user = Accounts.objects.get(id = request_id)
-        
-        return func(self, request)
+#             data['user'] = Accounts.objects.get(id = request_id)
+#             print(data)
+#         return func(self, data)
     
-    return wrapper
+#     return wrapper
