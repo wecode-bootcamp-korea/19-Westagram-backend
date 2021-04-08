@@ -16,10 +16,10 @@ class SignUpView(View):
     def post(self, request):
         try:
             data          = json.loads(request.body)
-            mobile_number = data.get('mobile_number', None)
-            email         = data.get('email', None)
-            name          = data.get('name', None)
-            nickname      = data.get('nickname', None)
+            mobile_number = data['mobile_number']
+            email         = data['email']
+            name          = data['name']
+            nickname      = data['nickname']
             password      = data['password']
             
             mobile_number_form = re.compile('[0-9]{3}-[0-9]{3,4}-[0-9]{4}')
@@ -54,6 +54,7 @@ class SignUpView(View):
                     )
 
             return JsonResponse({'MESSAGE':'SUCCESS'}, status=201)
+        
         except KeyError:
             return JsonResponse({'MESSAGE':'KEYERROR'}, status=401)
 
@@ -70,10 +71,11 @@ class SignInView(View):
                     Q(nickname      = login_id)
                     ):
 
-                if bcrypt.checkpw(data['password'].encode('utf-8'), user.get().password.encode('utf-8')):
+                if bcrypt.checkpw(password.encode('utf-8'), user.get().password.encode('utf-8')):
                     token = jwt.encode({'id' : user.get().id}, SECRET_KEY, ALGORITHM)
                     return JsonResponse({'MESSAGE':'SUCCESS', 'TOKEN': token}, status=200)
                 return JsonResponse({'MESSAGE':'PASSWORD_ERROR'}, status=401)
             return JsonResponse({'MESSAGE':'INVALID_USER'}, status=404)
+        
         except KeyError:
             return JsonResponse({'MESSAGE':'KEY_ERROR'})
