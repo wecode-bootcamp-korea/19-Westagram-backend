@@ -45,7 +45,7 @@ class SignUpView(View):
                     Q(mobile_number = mobile_number) |
                     Q(email         = email) |
                     Q(nickname      = nickname)
-                    ):
+                    ).exists():
                 return JsonResponse({'MESSAGE':'ALREADY_EXISTS'}, status=400)
 
             if len(data['password']) < PASSWORD_MINIMUM_LENGTH:
@@ -83,16 +83,10 @@ class SignInView(View):
                 Q(mobile_number = mobile_number) |
                 Q(email         = email) |
                 Q(nickname      = nickname)
-                ).exists() == False:
-            return JsonResponse({'MESSAGE':'INVALID_USER'}, status=404)
-                
-        user = User.objects.get(
-                Q(mobile_number = mobile_number) |
-                Q(email         = email) |
-                Q(nickname      = nickname)
-                )
+                ):
 
-        if bcrypt.checkpw(data['password'].encode('utf-8'), user.password.encode('utf-8')):
-            token = jwt.encode({'id' : user.id}, SECRET_KEY, ALGORITHM)
-            return JsonResponse({'TOKEN': token}, status=200)
-        return JsonResponse({'MESSAGE':'PASSWORD_ERROR'}, status=401)
+            if bcrypt.checkpw(data['password'].encode('utf-8'), user.get().password.encode('utf-8')):
+                token = jwt.encode({'id' : user.get().id}, SECRET_KEY, ALGORITHM)
+                return JsonResponse({'TOKEN': token}, status=200)
+            return JsonResponse({'MESSAGE':'PASSWORD_ERROR'}, status=401)
+        return JsonResponse({'MESSAGE':'INVALID_USER'}, status=404)
