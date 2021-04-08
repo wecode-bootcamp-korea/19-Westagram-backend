@@ -16,7 +16,7 @@ class SignupView(View):
     def post(self, request):
         data     = json.loads(request.body)
         
-        email_validation    = re.compile('^[a-zA-Z0-9+-_.]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$')
+        email_validation    = re.compile('^[a-zA-Z0-9+-_.]+@[a-zA-Z0-9]+\.[a-zA-Z0-9-.]+$')
         password_validation = re.compile('[(<`~!@#$%^&*,./?;:>)_]+')
         name_validation     = re.compile('[ㄱ-ㅎㅏ-ㅣ]+')
         phone_validation    = re.compile('[0-9]+')
@@ -72,14 +72,14 @@ class LoginView(View):
     
     def post(self, request):
         data = json.loads(request.body)
-
+        
         try:
             request_id = Accounts.objects.filter(Q(email = data['email'])|
                                             # Q(nickname = data.get('account'))|
-                                                 Q(phone = data['email']))
+                                                 Q(phone = data['email'])).first()
             
-            if bcrypt.checkpw(data.get('password').encode('utf-8'), request_id.get().password.encode('utf-8')):
-                token = jwt.encode({"user_id": request_id.first().id}, secret['secret'], ALGORITHM)
+            if bcrypt.checkpw(data.get('password').encode('utf-8'), request_id.password.encode('utf-8')):
+                token = jwt.encode({"user_id": request_id.id}, secret['secret'], ALGORITHM)
                 return JsonResponse({'token': token}, status = 200)
             
             return JsonResponse({'message': 'Invalid User'}, status = 400)
@@ -87,5 +87,5 @@ class LoginView(View):
         except KeyError:
             return JsonResponse({'message': 'Key Error'}, status = 400)
         
-        except Accounts.DoesNotExist:
-            return JsonResponse({'message': 'User Not Found'}, status = 404)
+        except Exception:
+            return JsonResponse({'message': 'Something Wrong'}, status = 404)
