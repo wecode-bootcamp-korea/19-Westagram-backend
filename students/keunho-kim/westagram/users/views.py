@@ -31,9 +31,9 @@ class SignUpView(View):
             User.objects.create(
                 email        = data['email'],
                 password     = hashed_password,
-                phone_number = data.get('phone_number',None),
-                name         = data.get('name',None),
-                nickname     = data.get('nickname',None)
+                phone_number = data['phone_number'],
+                name         = data['name'],
+                nickname     = data['nickname'],
             )
             return JsonResponse({'message': 'SUCCESS',"user_email":data['email']}, status=201)
 
@@ -42,7 +42,6 @@ class SignUpView(View):
 
         except KeyError:
             return JsonResponse({'message': 'KEY_ERROR'}, status=400)
-
 
 class LogInView(View):
     def post(self,request):
@@ -57,7 +56,7 @@ class LogInView(View):
             if not bcrypt.checkpw(data['password'].encode('utf-8'), user_email.password.encode('utf-8')):
                 return JsonResponse({'message': 'INCORRECT_PASSWORD'}, status=402)
 
-            access_token = jwt.encode({'id': user_email.id}, 'secret', algorithm='HS256')
+            access_token = jwt.encode({'id': user_email.id}, SECRET_KEY['secret'], algorithm='HS256')
             return JsonResponse({'token': access_token,'message':'SUCCESS','user_email':data['email']},status=200)
 
         except KeyError:
