@@ -3,8 +3,9 @@ import re
 import bcrypt
 import jwt
 
-from django.views import View
-from django.http  import JsonResponse
+from django.views     import View
+from django.http      import JsonResponse
+from django.db.models import Q
 
 from .models      import User
 
@@ -16,7 +17,7 @@ class SignupView(View):
             name                = data['name']
             phone_number        = data['phone_number']
             email               = data['email']
-            username            = data ['username']
+            username            = data['username']
             password            = data['password']
             email_vaildation    = re.match('[a-zA-Z0-9._+-]+@[a-z0-9-]+\.[a-z.]+',email)
             password_vaildation = re.match('^(?=.*[a-zA-Z0-9.,-]).{8,}$',password)
@@ -39,7 +40,7 @@ class SignupView(View):
             if User.objects.filter(email = email).exists():
                 return JsonResponse({'message' : 'Already exists email'}, status = 400)
 
-            hashed_password     = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+            hashed_password     = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')     # b까지 스트링으로 치기 때문에 encode후에 다시 decode하는 것!
 
             User.objects.create(
                 name         = name,
@@ -60,24 +61,19 @@ class SigninView(View):
             user     = data['user']
             password = data['password']
 
-            if User.objects.filter(username=user).exists():
-                user = User.objects.get(username=user)
+            user = User.objects.filter(Q(email        = user) | 
+                                       Q(phone_number = user) | 
+                                       Q(username     = user)).first()
 
-            elif User.objects.filter(email=user).exists():
-                user = User.objects.get(email=user)
-
-            elif User.objects.filter(phone_number=user).exists():
-                user = User.objects.get(phone_number=user)
-
-            else:
-                return JsonResponse({'message': 'Check your ID'},status = 401)
+            if not user:
+                return JsonResponse({'message' : 'INVALID USER'}, status=404)
          
             if bcrypt.checkpw(password.encode('utf-8'), user.password.encode('utf-8')):
                 token = jwt.encode({'user_id': user.id}, 'secret', algorithm='HS256')
-                return JsonResponse({'token' : token, 'message': 'Success!'}, status=200)
+                return JsonResponse({'token' : token,'message' : 'Success!'}, status=200)
 
             else:
                 return JsonResponse({'message': 'Check your password'}, status = 401)
 
         except KeyError:
-            return JsonResponse({'message': 'KEY ERROR'},status = 400)
+            return JsonResponse({'message': 'Key error'},status = 400)
